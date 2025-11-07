@@ -1,0 +1,23 @@
+{
+  "name": "fullstack-learning-practice",
+  "version": "1.0.0",
+  "description": "全栈学习实践项目 - NestJS + React + Three.js",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build",
+    "start": "pnpm --filter backend start:prod",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check",
+    "clean": "pnpm --recursive clean"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "pnpm@8.15.1"
+}
