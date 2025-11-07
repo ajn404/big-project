@@ -1,0 +1,104 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Category {
+  color: String!
+  createdAt: DateTime!
+  description: String!
+  icon: String
+  id: ID!
+  name: String!
+  order: Int!
+  practiceNodes: [PracticeNode!]!
+  updatedAt: DateTime!
+}
+
+"""内容类型"""
+enum ContentType {
+  COMPONENT
+  MDX
+}
+
+input CreatePracticeNodeInput {
+  categoryName: String!
+  componentName: String
+  content: String
+  contentType: ContentType! = MDX
+  description: String!
+  difficulty: Difficulty! = BEGINNER
+  estimatedTime: Int! = 30
+  prerequisites: [String!]! = []
+  tagNames: [String!]!
+  title: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""难度等级"""
+enum Difficulty {
+  ADVANCED
+  BEGINNER
+  INTERMEDIATE
+}
+
+type Mutation {
+  createPracticeNode(createPracticeNodeInput: CreatePracticeNodeInput!): PracticeNode!
+  removePracticeNode(id: ID!): Boolean!
+  updatePracticeNode(updatePracticeNodeInput: UpdatePracticeNodeInput!): PracticeNode!
+}
+
+type PracticeNode {
+  category: Category!
+  componentName: String
+  content: String
+  contentType: ContentType!
+  createdAt: DateTime!
+  date: DateTime!
+  description: String!
+  difficulty: Difficulty!
+  estimatedTime: Int!
+  id: ID!
+  prerequisites: [String!]!
+  tags: [Tag!]!
+  title: String!
+  updatedAt: DateTime!
+}
+
+type Query {
+  categories: [Category!]!
+  category(id: ID!): Category!
+  practiceNode(id: ID!): PracticeNode!
+  practiceNodes: [PracticeNode!]!
+  practiceNodesByCategory(categoryName: String!): [PracticeNode!]!
+  practiceNodesByTags(tagNames: [String!]!): [PracticeNode!]!
+  searchPracticeNodes(categoryName: String, query: String, tagNames: [String!]): [PracticeNode!]!
+  tag(id: ID!): Tag!
+  tags: [Tag!]!
+}
+
+type Tag {
+  color: String!
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  practiceNodes: [PracticeNode!]!
+  updatedAt: DateTime!
+}
+
+input UpdatePracticeNodeInput {
+  categoryName: String
+  componentName: String
+  content: String
+  contentType: ContentType = MDX
+  description: String
+  difficulty: Difficulty = BEGINNER
+  estimatedTime: Int = 30
+  id: ID!
+  prerequisites: [String!] = []
+  tagNames: [String!]
+  title: String
+}

@@ -123,7 +123,7 @@ export interface NavigationItem {
 // 组件Props相关类型
 export interface BaseComponentProps {
   className?: string;
-  children?: React.ReactNode;
+  children?: import('react').ReactNode;
 }
 
 // Three.js 相关类型

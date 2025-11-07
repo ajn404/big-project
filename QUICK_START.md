@@ -37,10 +37,10 @@ pnpm install
 
 ```bash
 # 创建数据库
-createdb learning_practice
+createdb-18 learning_practice
 
 # 创建用户（可选）
-psql -d learning_practice -c "CREATE USER postgres WITH PASSWORD 'password';"
+psql-18 -d learning_practice -c "CREATE USER postgres WITH PASSWORD 'password';"
 ```
 
 ### 3. 配置环境变量
