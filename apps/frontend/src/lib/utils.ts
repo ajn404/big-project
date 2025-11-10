@@ -1,32 +1,36 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string | Date) {
-  return new Date(date).toLocaleDateString('zh-CN', {
+// 格式化日期
+export function formatDate(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  return new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  })
+  }).format(dateObj)
 }
 
-export function getDifficultyColor(difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED') {
+// 获取难度颜色样式
+export function getDifficultyColor(difficulty: string): string {
   switch (difficulty) {
     case 'BEGINNER':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      return 'border-green-200 text-green-800 bg-green-50'
     case 'INTERMEDIATE':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+      return 'border-yellow-200 text-yellow-800 bg-yellow-50'
     case 'ADVANCED':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+      return 'border-red-200 text-red-800 bg-red-50'
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+      return 'border-gray-200 text-gray-800 bg-gray-50'
   }
 }
 
-export function getDifficultyLabel(difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED') {
+// 获取难度标签
+export function getDifficultyLabel(difficulty: string): string {
   switch (difficulty) {
     case 'BEGINNER':
       return '初级'
@@ -36,5 +40,33 @@ export function getDifficultyLabel(difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'AD
       return '高级'
     default:
       return '未知'
+  }
+}
+
+// 截断文本
+export function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
+
+// 格式化时间为相对时间
+export function formatRelativeTime(date: string | Date): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000)
+
+  if (diffInSeconds < 60) {
+    return '刚刚'
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `${minutes} 分钟前`
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600)
+    return `${hours} 小时前`
+  } else if (diffInSeconds < 2592000) {
+    const days = Math.floor(diffInSeconds / 86400)
+    return `${days} 天前`
+  } else {
+    return formatDate(dateObj)
   }
 }

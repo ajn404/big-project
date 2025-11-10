@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@apollo/client'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
+import { useDebounce } from 'use-debounce'
 import { GET_PRACTICE_NODES, SEARCH_PRACTICE_NODES } from '@/lib/graphql/queries'
 import { PracticeGrid } from '@/components/practice-grid'
 import { PracticeFilters } from '@/components/practice-filters'
@@ -18,6 +19,9 @@ export function PracticePage() {
     searchParams.get('tag') ? [searchParams.get('tag')!] : []
   )
 
+  // 搜索防抖，500ms 延迟
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500)
+
   // 监听 URL 参数变化并同步更新状态
   useEffect(() => {
     const urlCategory = searchParams.get('category') || ''
@@ -30,6 +34,21 @@ export function PracticePage() {
     setSelectedTags(urlTag ? [urlTag] : [])
     setSearchQuery(urlQuery)
   }, [searchParams])
+
+  // 当防抖后的搜索词变化时更新 URL
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams)
+    if (debouncedSearchQuery) {
+      newParams.set('q', debouncedSearchQuery)
+    } else {
+      newParams.delete('q')
+    }
+    
+    // 只有当搜索词真正变化时才更新 URL
+    if (newParams.get('q') !== searchParams.get('q')) {
+      setSearchParams(newParams)
+    }
+  }, [debouncedSearchQuery, setSearchParams])
 
   // 添加调试日志
   console.log('PracticePage render - selectedCategory:', selectedCategory, 'selectedTags:', selectedTags)
@@ -62,14 +81,14 @@ export function PracticePage() {
     setSearchParams(newParams)
   }
 
-  // 根据是否有搜索条件来决定使用哪个查询
-  const hasFilters = searchQuery || selectedCategory || selectedTags.length > 0
+  // 根据是否有搜索条件来决定使用哪个查询 - 使用防抖后的搜索词
+  const hasFilters = debouncedSearchQuery || selectedCategory || selectedTags.length > 0
 
   const { data, loading, error } = useQuery(
     hasFilters ? SEARCH_PRACTICE_NODES : GET_PRACTICE_NODES,
     {
       variables: hasFilters ? {
-        query: searchQuery || undefined,
+        query: debouncedSearchQuery || undefined,
         categoryName: selectedCategory || undefined,
         tagNames: selectedTags.length > 0 ? selectedTags : undefined,
       } : undefined,

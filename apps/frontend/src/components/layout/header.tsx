@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { GlobalSearch } from '@/components/global-search'
 import { Menu, Search } from 'lucide-react'
 import { useState } from 'react'
 
@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 export function Header({ onMenuClick }: HeaderProps) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -60,22 +60,41 @@ export function Header({ onMenuClick }: HeaderProps) {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
-          {/* Search */}
-          <div className="relative w-full max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="搜索实践内容..."
-              className="pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          {/* 全局搜索按钮 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="hidden md:flex items-center space-x-2 text-muted-foreground hover:text-foreground border border-input"
+          >
+            <Search className="h-4 w-4" />
+            <span className="hidden lg:block">搜索...</span>
+            <div className="hidden lg:flex items-center space-x-1 ml-auto">
+              <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">⌘</kbd>
+              <kbd className="px-1.5 py-0.5 text-xs bg-muted rounded border">K</kbd>
+            </div>
+          </Button>
+          
+          {/* 移动端搜索按钮 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSearchOpen(true)}
+            className="md:hidden"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
 
           {/* Theme toggle */}
           <ThemeToggle />
         </div>
       </div>
+      
+      {/* 全局搜索对话框 */}
+      <GlobalSearch 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+      />
     </header>
   )
 }

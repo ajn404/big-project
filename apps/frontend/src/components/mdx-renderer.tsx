@@ -64,7 +64,7 @@ const customComponents = {
   },
 
   // 预格式化文本 - 处理独立的 pre 标签
-  pre({ children, ...props }: any) {
+  pre({ children }: any) {
     // 如果已经被 code 组件处理，直接返回内容
     return <>{children}</>
   },
