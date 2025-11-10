@@ -51,6 +51,12 @@ export function Header({ onMenuClick }: HeaderProps) {
           >
             关于
           </Link>
+          <Link
+            to="/test"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            功能测试
+          </Link>
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">

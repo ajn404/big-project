@@ -239,13 +239,13 @@ export function EnhancedMDXEditor({
             />
             
             {/* 行号 (可选) */}
-            <div className="absolute left-0 top-0 p-4 text-xs text-muted-foreground bg-muted/50 pointer-events-none">
+            {/* <div className="absolute left-0 top-0 p-4 text-xs text-muted-foreground bg-muted/50 pointer-events-none">
               {value.split('\n').map((_, index) => (
                 <div key={index} className="h-5 leading-5">
                   {index + 1}
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         )}
 

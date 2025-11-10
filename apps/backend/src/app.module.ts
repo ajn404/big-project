@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
 
 import { DatabaseModule } from './database/database.module';
@@ -17,6 +18,9 @@ import { TagModule } from './tag/tag.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+
+    // 调度模块 - 启用定时任务
+    ScheduleModule.forRoot(),
 
     // GraphQL 模块
     GraphQLModule.forRoot<ApolloDriverConfig>({

@@ -26,14 +26,15 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@learning-practice/shared-types": "workspace:*",
     "@nestjs/apollo": "^12.0.11",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.0.0",
     "@nestjs/graphql": "^12.0.11",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^6.0.1",
     "@nestjs/typeorm": "^10.0.1",
-    "@learning-practice/shared-types": "workspace:*",
     "apollo-server-express": "^3.12.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",

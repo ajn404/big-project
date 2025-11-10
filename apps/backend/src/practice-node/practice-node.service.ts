@@ -6,6 +6,7 @@ import { Category } from '../database/entities/category.entity';
 import { Tag } from '../database/entities/tag.entity';
 import { CreatePracticeNodeInput } from './dto/create-practice-node.input';
 import { UpdatePracticeNodeInput } from './dto/update-practice-node.input';
+import { TagService } from '../tag/tag.service';
 
 @Injectable()
 export class PracticeNodeService {
@@ -16,6 +17,7 @@ export class PracticeNodeService {
     private categoryRepository: Repository<Category>,
     @InjectRepository(Tag)
     private tagRepository: Repository<Tag>,
+    private tagService: TagService,
   ) {}
 
   async findAll(): Promise<PracticeNode[]> {
@@ -108,6 +110,9 @@ export class PracticeNodeService {
     const { id, categoryName, tagNames, ...updateData } = updatePracticeNodeInput;
 
     const practiceNode = await this.findOne(id);
+    
+    // 记录旧标签，用于后续清理
+    const oldTagIds = practiceNode.tags.map(tag => tag.id);
 
     // 更新分类（如果提供）
     if (categoryName) {
@@ -144,12 +149,37 @@ export class PracticeNodeService {
     // 更新其他字段
     Object.assign(practiceNode, updateData);
 
-    return this.practiceNodeRepository.save(practiceNode);
+    const updatedNode = await this.practiceNodeRepository.save(practiceNode);
+
+    // 清理可能变为无用的旧标签
+    if (tagNames) {
+      for (const oldTagId of oldTagIds) {
+        await this.tagService.removeTagIfUnused(oldTagId);
+      }
+    }
+
+    return updatedNode;
   }
 
   async remove(id: string): Promise<boolean> {
+    // 先获取要删除的文章及其标签
+    const practiceNode = await this.findOne(id);
+    const tagIds = practiceNode.tags.map(tag => tag.id);
+
+    // 删除文章
     const result = await this.practiceNodeRepository.delete(id);
-    return result.affected > 0;
+    
+    if (result.affected > 0) {
+      // 清理可能变为无用的标签
+      for (const tagId of tagIds) {
+        await this.tagService.removeTagIfUnused(tagId);
+      }
+      
+      console.log(`Deleted practice node: ${practiceNode.title}`);
+      return true;
+    }
+    
+    return false;
   }
 
   async findByCategory(categoryName: string): Promise<PracticeNode[]> {

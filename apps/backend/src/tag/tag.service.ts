@@ -23,4 +23,33 @@ export class TagService {
       relations: ['practiceNodes'],
     });
   }
+
+  // 清理没有关联文章的标签
+  async cleanupUnusedTags(): Promise<void> {
+    const allTags = await this.tagRepository.find({
+      relations: ['practiceNodes'],
+    });
+
+    const unusedTags = allTags.filter(tag => 
+      !tag.practiceNodes || tag.practiceNodes.length === 0
+    );
+
+    if (unusedTags.length > 0) {
+      await this.tagRepository.remove(unusedTags);
+      console.log(`Cleaned up ${unusedTags.length} unused tags:`, unusedTags.map(t => t.name));
+    }
+  }
+
+  // 检查特定标签是否还有关联的文章
+  async removeTagIfUnused(tagId: string): Promise<void> {
+    const tag = await this.tagRepository.findOne({
+      where: { id: tagId },
+      relations: ['practiceNodes'],
+    });
+
+    if (tag && (!tag.practiceNodes || tag.practiceNodes.length === 0)) {
+      await this.tagRepository.remove(tag);
+      console.log(`Removed unused tag: ${tag.name}`);
+    }
+  }
 }
