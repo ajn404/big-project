@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@apollo/client'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { GET_PRACTICE_NODES, SEARCH_PRACTICE_NODES } from '@/lib/graphql/queries'
 import { PracticeGrid } from '@/components/practice-grid'
 import { PracticeFilters } from '@/components/practice-filters'
@@ -9,12 +9,58 @@ import { Input } from '@/components/ui/input'
 import { Search } from 'lucide-react'
 
 export function PracticePage() {
-  const [searchParams] = useSearchParams()
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '')
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || '')
-  const [selectedTags, setSelectedTags] = useState<string[]>(
+  const [searchParams, setSearchParams] = useSearchParams()
+  
+  // 初始化状态，只在组件挂载时使用 searchParams
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '')
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '')
+  const [selectedTags, setSelectedTags] = useState<string[]>(() => 
     searchParams.get('tag') ? [searchParams.get('tag')!] : []
   )
+
+  // 监听 URL 参数变化并同步更新状态
+  useEffect(() => {
+    const urlCategory = searchParams.get('category') || ''
+    const urlTag = searchParams.get('tag')
+    const urlQuery = searchParams.get('q') || ''
+    
+    console.log('URL params changed:', { urlCategory, urlTag, urlQuery })
+    
+    setSelectedCategory(urlCategory)
+    setSelectedTags(urlTag ? [urlTag] : [])
+    setSearchQuery(urlQuery)
+  }, [searchParams])
+
+  // 添加调试日志
+  console.log('PracticePage render - selectedCategory:', selectedCategory, 'selectedTags:', selectedTags)
+
+  // 包装状态更新函数以确保正确触发
+  const handleCategoryChange = (category: string) => {
+    console.log('handleCategoryChange called with:', category)
+    
+    // 更新URL参数
+    const newParams = new URLSearchParams(searchParams)
+    if (category) {
+      newParams.set('category', category)
+    } else {
+      newParams.delete('category')
+    }
+    setSearchParams(newParams)
+  }
+
+  const handleTagsChange = (tags: string[]) => {
+    console.log('handleTagsChange called with:', tags)
+    
+    // 更新URL参数
+    const newParams = new URLSearchParams(searchParams)
+    newParams.delete('tag') // 先删除所有tag参数
+    
+    if (tags.length > 0) {
+      // 目前只支持单个标签，取第一个
+      newParams.set('tag', tags[0])
+    }
+    setSearchParams(newParams)
+  }
 
   // 根据是否有搜索条件来决定使用哪个查询
   const hasFilters = searchQuery || selectedCategory || selectedTags.length > 0
@@ -28,6 +74,9 @@ export function PracticePage() {
         tagNames: selectedTags.length > 0 ? selectedTags : undefined,
       } : undefined,
       skip: false,
+      // 确保状态变化时重新获取数据
+      fetchPolicy: 'cache-and-network',
+      notifyOnNetworkStatusChange: true,
     }
   )
 
@@ -75,9 +124,9 @@ export function PracticePage() {
         {/* Filters */}
         <PracticeFilters
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onCategoryChange={handleCategoryChange}
           selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
+          onTagsChange={handleTagsChange}
         />
       </div>
 

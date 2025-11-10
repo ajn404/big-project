@@ -25,10 +25,12 @@ export function PracticeFilters({
   const tags = tagsData?.tags || []
 
   const handleCategoryClick = (categoryName: string) => {
+    console.log('Category clicked:', categoryName, 'Current:', selectedCategory)
     onCategoryChange(selectedCategory === categoryName ? '' : categoryName)
   }
 
   const handleTagClick = (tagName: string) => {
+    console.log('Tag clicked:', tagName, 'Current:', selectedTags)
     if (selectedTags.includes(tagName)) {
       onTagsChange(selectedTags.filter(t => t !== tagName))
     } else {
