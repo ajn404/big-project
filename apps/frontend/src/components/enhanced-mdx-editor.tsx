@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
@@ -34,7 +34,6 @@ export function EnhancedMDXEditor({
   height = "400px"
 }: EnhancedMDXEditorProps) {
   const [isPreview, setIsPreview] = useState(false)
-  const [selectedText, setSelectedText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // 工具栏操作

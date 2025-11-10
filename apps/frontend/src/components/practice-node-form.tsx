@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE, UPDATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,10 +8,35 @@ import { Badge } from '@/components/ui/badge'
 import { X, Save, Eye, Code } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
 
+interface Category {
+  id: string
+  name: string
+  color?: string
+}
+
+interface Tag {
+  id: string
+  name: string
+}
+
+interface PracticeNode {
+  id: string
+  title: string
+  description: string
+  content: string
+  contentType: 'MDX' | 'COMPONENT'
+  componentName?: string
+  category: Category
+  tags: Tag[]
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+  estimatedTime: number
+  prerequisites: string[]
+}
+
 interface PracticeNodeFormProps {
-  node?: any
-  categories: any[]
-  tags: any[]
+  node?: PracticeNode
+  categories: Category[]
+  tags: Tag[]
   onClose: () => void
 }
 
@@ -111,7 +136,7 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
   const removePrerequisite = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      prerequisites: prev.prerequisites.filter((_, i) => i !== index)
+      prerequisites: prev.prerequisites.filter((_: string, i: number) => i !== index)
     }))
   }
 
@@ -128,7 +153,7 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
   const removeTag = (tagName: string) => {
     setFormData(prev => ({
       ...prev,
-      tagNames: prev.tagNames.filter(name => name !== tagName)
+      tagNames: prev.tagNames.filter((name: string) => name !== tagName)
     }))
   }
 

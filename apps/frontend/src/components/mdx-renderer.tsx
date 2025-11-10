@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -36,8 +36,9 @@ const customComponents = {
       )
     }
 
+    // 块级代码使用 figure 而不是 div 来避免嵌套问题
     return (
-      <div className="relative group my-4">
+      <figure className="relative group my-4 not-prose">
         <div className="flex items-center justify-between bg-muted px-4 py-2 rounded-t-lg border border-border border-b-0">
           <span className="text-sm font-medium text-foreground">
             {language || 'text'}
@@ -58,8 +59,14 @@ const customComponents = {
             {children}
           </code>
         </pre>
-      </div>
+      </figure>
     )
+  },
+
+  // 预格式化文本 - 处理独立的 pre 标签
+  pre({ children, ...props }: any) {
+    // 如果已经被 code 组件处理，直接返回内容
+    return <>{children}</>
   },
 
   // 标题组件 - 添加锚点
@@ -114,8 +121,24 @@ const customComponents = {
     )
   },
 
-  // 段落
+  // 段落 - 避免嵌套块级元素
   p({ children, ...props }: any) {
+    // 检查子元素是否包含块级元素
+    const hasBlockElement = React.Children.toArray(children).some((child: any) => {
+      if (React.isValidElement(child)) {
+        const type = child.type
+        // 检查是否是块级组件
+        return typeof type === 'function' && 
+               (type.name === 'code' || type.name === 'table' || type.name === 'figure')
+      }
+      return false
+    })
+
+    // 如果包含块级元素，使用 div 而不是 p
+    if (hasBlockElement) {
+      return <div className="mb-4 leading-7 text-foreground" {...props}>{children}</div>
+    }
+
     return <p className="mb-4 leading-7 text-foreground" {...props}>{children}</p>
   },
 
@@ -193,14 +216,14 @@ const customComponents = {
     )
   },
 
-  // 表格
+  // 表格 - 使用 figure 避免嵌套问题
   table({ children, ...props }: any) {
     return (
-      <div className="overflow-x-auto my-6 border border-border rounded-lg">
+      <figure className="overflow-x-auto my-6 border border-border rounded-lg not-prose">
         <table className="w-full border-collapse" {...props}>
           {children}
         </table>
-      </div>
+      </figure>
     )
   },
 
@@ -288,6 +311,9 @@ export function MDXRenderer({ content }: MDXRendererProps) {
           rehypeKatex,      // 数学公式渲染
         ]}
         components={customComponents}
+        // 配置选项避免嵌套问题
+        skipHtml={false}
+        disallowedElements={[]}
       >
         {content}
       </ReactMarkdown>

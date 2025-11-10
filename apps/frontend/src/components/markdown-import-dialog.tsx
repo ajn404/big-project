@@ -7,20 +7,48 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { X, Upload, FileText, Download } from 'lucide-react'
 
+interface Category {
+  id: string
+  name: string
+  color?: string
+}
+
+interface Tag {
+  id: string
+  name: string
+}
+
 interface MarkdownImportDialogProps {
-  categories: any[]
-  tags: any[]
+  categories: Category[]
+  tags: Tag[]
   onClose: () => void
   onImportComplete: () => void
 }
 
+type DifficultyType = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
+
 const DIFFICULTY_OPTIONS = [
-  { value: 'BEGINNER', label: '初级' },
-  { value: 'INTERMEDIATE', label: '中级' },
-  { value: 'ADVANCED', label: '高级' },
+  { value: 'BEGINNER' as const, label: '初级' },
+  { value: 'INTERMEDIATE' as const, label: '中级' },
+  { value: 'ADVANCED' as const, label: '高级' },
 ]
 
-export function MarkdownImportDialog({ categories, tags, onClose, onImportComplete }: MarkdownImportDialogProps) {
+interface FrontmatterData {
+  [key: string]: string | string[] | number | undefined
+  title?: string
+  description?: string
+  excerpt?: string
+  category?: string
+  tags?: string[]
+  keywords?: string[]
+  difficulty?: string
+  estimatedTime?: string
+  readingTime?: string
+  prerequisites?: string[]
+  requires?: string[]
+}
+
+export function MarkdownImportDialog({ categories, onClose, onImportComplete }: MarkdownImportDialogProps) {
   const [importMethod, setImportMethod] = useState<'file' | 'url' | 'text'>('file')
   const [markdownContent, setMarkdownContent] = useState('')
   const [url, setUrl] = useState('')
@@ -33,7 +61,7 @@ export function MarkdownImportDialog({ categories, tags, onClose, onImportComple
     description: '',
     categoryName: '',
     tagNames: [] as string[],
-    difficulty: 'BEGINNER',
+    difficulty: 'BEGINNER' as DifficultyType,
     estimatedTime: 30,
     prerequisites: [] as string[],
   })
@@ -54,7 +82,7 @@ export function MarkdownImportDialog({ categories, tags, onClose, onImportComple
     try {
       // Extract frontmatter if present
       const frontmatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/)
-      let frontmatter = {}
+      let frontmatter: FrontmatterData = {}
       let mainContent = content
 
       if (frontmatterMatch) {
@@ -101,11 +129,11 @@ export function MarkdownImportDialog({ categories, tags, onClose, onImportComple
       }
 
       // Parse other metadata
-      const tags = frontmatter['tags'] || frontmatter['keywords'] || []
-      const category = frontmatter['category'] || ''
-      const difficulty = frontmatter['difficulty'] || 'BEGINNER'
-      const estimatedTime = parseInt(frontmatter['estimatedTime'] || frontmatter['readingTime'] || '30')
-      const prerequisites = frontmatter['prerequisites'] || frontmatter['requires'] || []
+      const tags = (frontmatter.tags || frontmatter.keywords || []) as string[]
+      const category = (frontmatter.category || '') as string
+      const difficulty = (frontmatter.difficulty || 'BEGINNER') as DifficultyType
+      const estimatedTime = parseInt(String(frontmatter.estimatedTime || frontmatter.readingTime || '30'))
+      const prerequisites = (frontmatter.prerequisites || frontmatter.requires || []) as string[]
 
       const parsed = {
         title: title || 'Untitled',
@@ -130,7 +158,7 @@ export function MarkdownImportDialog({ categories, tags, onClose, onImportComple
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file && file.type === 'text/markdown' || file.name.endsWith('.md')) {
+    if (file && (file.type === 'text/markdown' || file.name.endsWith('.md') || file.name.endsWith('.markdown'))) {
       const reader = new FileReader()
       reader.onload = (e) => {
         const content = e.target?.result as string
@@ -165,7 +193,7 @@ export function MarkdownImportDialog({ categories, tags, onClose, onImportComple
     parseMarkdown(markdownContent)
   }
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | string[] | number) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
