@@ -34,7 +34,7 @@ export function HomePage() {
             <Button asChild size="lg" variant="secondary">
               <Link to="/practice">开始实践</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+            <Button asChild size="lg" variant="outline" className="border-white text-black dark:text-white">
               <Link to="/about">了解更多</Link>
             </Button>
           </div>
