@@ -3,7 +3,9 @@ import { Layout } from '@/components/layout'
 import { HomePage } from '@/pages/home'
 import { PracticePage } from '@/pages/practice'
 import { PracticeDetailPage } from '@/pages/practice-detail'
+import { PracticeManagePage } from '@/pages/practice-manage'
 import { AboutPage } from '@/pages/about'
+import { QuickTest } from '@/components/quick-test'
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/practice/:id" element={<PracticeDetailPage />} />
+        <Route path="/admin/practice" element={<PracticeManagePage />} />
+        <Route path="/test" element={<QuickTest />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>
     </Layout>

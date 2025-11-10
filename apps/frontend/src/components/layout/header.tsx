@@ -25,16 +25,8 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Menu className="h-6 w-6" />
         </Button>
 
-        {/* Logo */}
-        <Link to="/" className="mr-6 flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-lg bg-primary"></div>
-          <span className="hidden font-bold sm:inline-block">
-            学习实践平台
-          </span>
-        </Link>
-
         {/* Main navigation */}
-        <nav className="hidden lg:flex items-center space-x-6 text-sm font-medium">
+        <nav className="mx-4 hidden lg:flex items-center space-x-6 text-sm font-medium">
           <Link
             to="/"
             className="transition-colors hover:text-foreground/80 text-foreground"
@@ -46,6 +38,12 @@ export function Header({ onMenuClick }: HeaderProps) {
             className="transition-colors hover:text-foreground/80 text-foreground/60"
           >
             实践
+          </Link>
+          <Link
+            to="/admin/practice"
+            className="transition-colors hover:text-foreground/80 text-foreground/60"
+          >
+            文章管理
           </Link>
           <Link
             to="/about"
