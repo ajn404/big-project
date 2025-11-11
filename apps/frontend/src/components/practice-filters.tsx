@@ -1,3 +1,4 @@
+import React from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_CATEGORIES, GET_TAGS } from '@/lib/graphql/queries'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +13,7 @@ interface PracticeFiltersProps {
   onTagsChange: (tags: string[]) => void
 }
 
-export function PracticeFilters({
+export const PracticeFilters = React.memo(function PracticeFilters({
   selectedCategory,
   onCategoryChange,
   selectedTags,
@@ -143,4 +144,4 @@ export function PracticeFilters({
       </CardContent>
     </Card>
   )
-}
+})

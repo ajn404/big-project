@@ -1,167 +1,77 @@
-import { useState, useEffect } from 'react'
-import { useQuery } from '@apollo/client'
-import { useSearchParams } from 'react-router-dom'
-import { useDebounce } from 'use-debounce'
-import { GET_PRACTICE_NODES, SEARCH_PRACTICE_NODES } from '@/lib/graphql/queries'
+import { useState, useCallback, useMemo } from 'react'
+import { flushSync } from 'react-dom'
+import { FilterProvider } from '@/contexts/filter-context'
 import { PracticeGrid } from '@/components/practice-grid'
 import { PracticeFilters } from '@/components/practice-filters'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Search } from 'lucide-react'
+import { PracticePageHeader } from '@/components/practice-page-header'
+import { PracticeSearchBar } from '@/components/practice-search-bar'
+import { useSearchPracticeNodes } from '@/hooks/useSearchPracticeNodes'
 
 export function PracticePage() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  
-  // 初始化状态，只在组件挂载时使用 searchParams
-  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '')
-  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '')
-  const [selectedTags, setSelectedTags] = useState<string[]>(() => 
-    searchParams.get('tag') ? [searchParams.get('tag')!] : []
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  const handleExternalFilter = useCallback((type: 'category' | 'tag', value: string) => {
+    flushSync(() => {
+      if (type === 'category') {
+        setSelectedCategory(value)
+        setSearchQuery('')
+        setSelectedTags([])
+      } else {
+        setSelectedTags([value])
+        setSearchQuery('')
+        setSelectedCategory('')
+      }
+    })
+  }, [])
+
+  const filterContextValue = useMemo(
+    () => ({ onFilterSelect: handleExternalFilter }),
+    [handleExternalFilter]
   )
 
-  // 搜索防抖，500ms 延迟
-  const [debouncedSearchQuery] = useDebounce(searchQuery, 500)
+  const { results: practiceNodes, loading, error } = useSearchPracticeNodes(searchQuery, {
+    category: selectedCategory,
+    tags: selectedTags,
+    debounceMs: 500,
+  })
 
-  // 监听 URL 参数变化并同步更新状态
-  useEffect(() => {
-    const urlCategory = searchParams.get('category') || ''
-    const urlTag = searchParams.get('tag')
-    const urlQuery = searchParams.get('q') || ''
-    
-    console.log('URL params changed:', { urlCategory, urlTag, urlQuery })
-    
-    setSelectedCategory(urlCategory)
-    setSelectedTags(urlTag ? [urlTag] : [])
-    setSearchQuery(urlQuery)
-  }, [searchParams])
-
-  // 当防抖后的搜索词变化时更新 URL
-  useEffect(() => {
-    const newParams = new URLSearchParams(searchParams)
-    if (debouncedSearchQuery) {
-      newParams.set('q', debouncedSearchQuery)
-    } else {
-      newParams.delete('q')
-    }
-    
-    // 只有当搜索词真正变化时才更新 URL
-    if (newParams.get('q') !== searchParams.get('q')) {
-      setSearchParams(newParams)
-    }
-  }, [debouncedSearchQuery, setSearchParams])
-
-  // 添加调试日志
-  console.log('PracticePage render - selectedCategory:', selectedCategory, 'selectedTags:', selectedTags)
-
-  // 包装状态更新函数以确保正确触发
-  const handleCategoryChange = (category: string) => {
-    console.log('handleCategoryChange called with:', category)
-    
-    // 更新URL参数
-    const newParams = new URLSearchParams(searchParams)
-    if (category) {
-      newParams.set('category', category)
-    } else {
-      newParams.delete('category')
-    }
-    setSearchParams(newParams)
-  }
-
-  const handleTagsChange = (tags: string[]) => {
-    console.log('handleTagsChange called with:', tags)
-    
-    // 更新URL参数
-    const newParams = new URLSearchParams(searchParams)
-    newParams.delete('tag') // 先删除所有tag参数
-    
-    if (tags.length > 0) {
-      // 目前只支持单个标签，取第一个
-      newParams.set('tag', tags[0])
-    }
-    setSearchParams(newParams)
-  }
-
-  // 根据是否有搜索条件来决定使用哪个查询 - 使用防抖后的搜索词
-  const hasFilters = debouncedSearchQuery || selectedCategory || selectedTags.length > 0
-
-  const { data, loading, error } = useQuery(
-    hasFilters ? SEARCH_PRACTICE_NODES : GET_PRACTICE_NODES,
-    {
-      variables: hasFilters ? {
-        query: debouncedSearchQuery || undefined,
-        categoryName: selectedCategory || undefined,
-        tagNames: selectedTags.length > 0 ? selectedTags : undefined,
-      } : undefined,
-      skip: false,
-      // 确保状态变化时重新获取数据
-      fetchPolicy: 'cache-and-network',
-      notifyOnNetworkStatusChange: true,
-    }
-  )
-
-  if (loading) return <div>加载中...</div>
-  if (error) return <div>错误: {error.message}</div>
-
-  const practiceNodes = hasFilters 
-    ? data?.searchPracticeNodes || []
-    : data?.practiceNodes || []
+  const hasFilters = !!(searchQuery || selectedCategory || selectedTags.length)
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-4xl font-bold">实践项目</h1>
-        <p className="text-xl text-muted-foreground mt-2">
-          通过动手实践掌握现代Web开发技术
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="space-y-6">
-        {/* Search Bar */}
-        <Card>
-          <CardHeader>
-            <CardTitle>搜索实践项目</CardTitle>
-            <CardDescription>
-              根据标题、描述或标签搜索你感兴趣的实践项目
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="搜索实践项目..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Filters */}
-        <PracticeFilters
-          selectedCategory={selectedCategory}
-          onCategoryChange={handleCategoryChange}
-          selectedTags={selectedTags}
-          onTagsChange={handleTagsChange}
-        />
-      </div>
-
-      {/* Results */}
-      <div>
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold">
-            {hasFilters ? '搜索结果' : '所有项目'}
-          </h2>
-          <p className="text-muted-foreground">
-            找到 {practiceNodes.length} 个实践项目
-          </p>
+    <FilterProvider value={filterContextValue}>
+      <div className="space-y-8">
+        <PracticePageHeader hasFilters={hasFilters} resultsCount={practiceNodes.length} />
+        <div className="space-y-6">
+          <PracticeSearchBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+          <PracticeFilters
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+          />
         </div>
 
-        <PracticeGrid items={practiceNodes} />
+        <div className="relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm z-10 rounded-lg">
+              <div className="flex items-center space-x-2 bg-background px-4 py-2 rounded-lg shadow-lg">
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-muted-foreground">搜索中...</span>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">搜索出错：{error.message}</p>
+            </div>
+          )}
+
+          <PracticeGrid items={practiceNodes} />
+        </div>
       </div>
-    </div>
+    </FilterProvider>
   )
 }

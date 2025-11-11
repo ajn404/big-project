@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +30,7 @@ interface PracticeGridProps {
   items: PracticeItem[]
 }
 
-export function PracticeGrid({ items }: PracticeGridProps) {
+export const PracticeGrid = React.memo(function PracticeGrid({ items }: PracticeGridProps) {
   if (items.length === 0) {
     return (
       <div className="text-center py-12">
@@ -118,4 +119,4 @@ export function PracticeGrid({ items }: PracticeGridProps) {
       ))}
     </div>
   )
-}
+})

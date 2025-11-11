@@ -1,9 +1,10 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { X, Home, BookOpen, Info, Folder, Tag, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@apollo/client'
 import { GET_CATEGORIES, GET_TAGS } from '@/lib/graphql/queries'
+import { useFilter } from '@/contexts/filter-context'
 
 interface SidebarProps {
   open: boolean
@@ -12,8 +13,27 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { onFilterSelect } = useFilter()
   const { data: categoriesData } = useQuery(GET_CATEGORIES)
   const { data: tagsData } = useQuery(GET_TAGS)
+
+  // 处理分类和标签点击
+  const handleFilterClick = (type: 'category' | 'tag', value: string) => {
+    onClose()
+    
+    if (location.pathname === '/practice') {
+      // 如果当前在 practice 页面，使用回调函数
+      onFilterSelect?.(type, value)
+    } else {
+      // 如果不在 practice 页面，导航到 practice 页面
+      navigate('/practice')
+      // 延迟调用筛选，确保页面已经加载
+      setTimeout(() => {
+        onFilterSelect?.(type, value)
+      }, 100)
+    }
+  }
 
   const navigation = [
     { name: '首页', href: '/', icon: Home },
@@ -97,17 +117,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   <ul className="space-y-1">
                     {categoriesData.categories.map((category: any) => (
                       <li key={category.id}>
-                        <Link
-                          to={`/practice?category=${category.name}`}
-                          onClick={onClose}
-                          className="flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                        <button
+                          onClick={() => handleFilterClick('category', category.name)}
+                          className="w-full flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                         >
                           <Folder className="h-4 w-4" />
                           <span>{category.name}</span>
                           <span className="ml-auto text-xs">
                             {category.practiceNodes?.length || 0}
                           </span>
-                        </Link>
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -122,15 +141,14 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                   </h2>
                   <div className="flex flex-wrap gap-2">
                     {tagsData.tags.slice(0, 10).map((tag: any) => (
-                      <Link
+                      <button
                         key={tag.id}
-                        to={`/practice?tag=${tag.name}`}
-                        onClick={onClose}
+                        onClick={() => handleFilterClick('tag', tag.name)}
                         className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors hover:bg-accent hover:text-accent-foreground"
                       >
                         <Tag className="mr-1 h-3 w-3" />
                         {tag.name}
-                      </Link>
+                      </button>
                     ))}
                   </div>
                 </div>
