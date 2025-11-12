@@ -63,7 +63,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex h-16 items-center justify-between border-b px-6">
+          <div className="flex h-16 items-center justify-between  px-6">
             <Link to="/" className="flex items-center space-x-2" onClick={onClose}>
               <div className="h-8 w-8 rounded-lg bg-primary"></div>
               <span className="font-bold">学习实践</span>

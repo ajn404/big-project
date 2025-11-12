@@ -26,7 +26,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 left-72 z-50 w-[calc(100vw-18rem)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         {/* Mobile menu button */}
         <Button

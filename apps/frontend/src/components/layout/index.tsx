@@ -14,7 +14,7 @@ export function Layout({ children }: LayoutProps) {
       <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 p-6 lg:pl-72">
+        <main className="flex-1 p-6 lg:pl-80">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>
