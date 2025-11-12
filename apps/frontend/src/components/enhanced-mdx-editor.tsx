@@ -16,7 +16,8 @@ import {
   Heading2,
   Heading3,
   Table,
-  Minus
+  Minus,
+  Component
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
 
@@ -34,7 +35,52 @@ export function EnhancedMDXEditor({
   height = "400px"
 }: EnhancedMDXEditorProps) {
   const [isPreview, setIsPreview] = useState(false)
+  const [showComponentMenu, setShowComponentMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // 组件模板库 - 使用兼容ReactMarkdown的格式
+  const componentTemplates = [
+    {
+      name: 'Button',
+      description: '按钮组件',
+      template: `:::button\n点击我\n:::`
+    },
+    {
+      name: 'Alert-Info',
+      description: '信息提示',
+      template: `:::alert{type="info"}\n这是一个信息提示\n:::`
+    },
+    {
+      name: 'Alert-Warning', 
+      description: '警告提示',
+      template: `:::alert{type="warning"}\n这是一个警告提示\n:::`
+    },
+    {
+      name: 'Alert-Success',
+      description: '成功提示', 
+      template: `:::alert{type="success"}\n这是一个成功提示\n:::`
+    },
+    {
+      name: 'Alert-Error',
+      description: '错误提示',
+      template: `:::alert{type="error"}\n这是一个错误提示\n:::`
+    },
+    {
+      name: 'CodeBlock',
+      description: '代码块',
+      template: `\`\`\`typescript\nconst example = () => {\n  return (\n    <div>\n      <h1>Hello World</h1>\n    </div>\n  )\n}\n\`\`\``
+    },
+    {
+      name: 'Card',
+      description: '卡片布局',
+      template: `:::card\n123:::`
+    },
+    {
+      name: 'Highlight',
+      description: '高亮文本',
+      template: `这是一段包含 ==高亮文本== 的内容。`
+    }
+  ]
 
   // 工具栏操作
   const insertText = (before: string, after: string = '', defaultText: string = '') => {
@@ -137,6 +183,16 @@ export function EnhancedMDXEditor({
           action: () => insertAtNewLine('---') 
         },
       ]
+    },
+    {
+      group: '组件',
+      buttons: [
+        { 
+          icon: Component, 
+          label: '插入组件', 
+          action: () => setShowComponentMenu(!showComponentMenu) 
+        },
+      ]
     }
   ]
 
@@ -192,9 +248,13 @@ export function EnhancedMDXEditor({
                 return (
                   <Button
                     key={buttonIndex}
-                    variant="ghost"
+                    variant={button.label === '插入组件' && showComponentMenu ? "default" : "ghost"}
                     size="sm"
-                    onClick={button.action}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      button.action()
+                    }}
                     className="h-8 w-8 p-0"
                     title={button.label}
                   >
@@ -214,7 +274,11 @@ export function EnhancedMDXEditor({
           <Button
             variant={isPreview ? "default" : "ghost"}
             size="sm"
-            onClick={togglePreview}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              togglePreview()
+            }}
             className="h-8"
           >
             {isPreview ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
@@ -222,6 +286,45 @@ export function EnhancedMDXEditor({
           </Button>
         </div>
       </div>
+
+      {/* 组件选择菜单 */}
+      {showComponentMenu && (
+        <div className="bg-background border-b border-border p-4">
+          <h4 className="text-sm font-medium mb-3">选择要插入的组件：</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {componentTemplates.map((component, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="h-auto p-3 flex flex-col items-start text-left"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  insertAtNewLine(component.template)
+                  setShowComponentMenu(false)
+                }}
+              >
+                <div className="font-medium text-sm">{component.name}</div>
+                <div className="text-xs text-muted-foreground mt-1">{component.description}</div>
+              </Button>
+            ))}
+          </div>
+          <div className="mt-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowComponentMenu(false)
+              }}
+            >
+              取消
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* 编辑器区域 */}
       <div className="flex" style={{ height }}>

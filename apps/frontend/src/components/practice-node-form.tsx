@@ -159,7 +159,7 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-6xl max-h-[90vh] overflow-auto">
+      <Card className="w-full max-w-[80vw] max-h-[95vh] overflow-auto">
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>{isEditing ? '编辑文章' : '创建新文章'}</CardTitle>
           <div className="flex items-center gap-2">

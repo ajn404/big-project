@@ -8,6 +8,8 @@ import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import remarkToc from 'remark-toc'
 import rehypeSlug from 'rehype-slug'
+import rehypeRaw from 'rehype-raw'
+import { visit } from 'unist-util-visit'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,6 +18,84 @@ import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink } from 'luci
 
 interface MDXRendererProps {
   content: string
+}
+
+// 自定义remark插件，用于解析:::组件语法
+const remarkCustomComponents = () => {
+  return (tree: any) => {
+    // 处理组件语法 :::component:::
+    visit(tree, 'paragraph', (node, index, parent) => {
+      // 检查段落的第一个子元素是否为文本且以:::开头
+      if (node.children && node.children.length === 1 && 
+          node.children[0].type === 'text' && 
+          node.children[0].value.startsWith(':::')) {
+        
+        const text = node.children[0].value
+        const lines = text.split('\n')
+        const openTag = lines[0]
+        
+        // 解析组件类型和属性
+        const componentMatch = openTag.match(/:::(\w+)(\{[^}]+\})?/)
+        if (!componentMatch) return
+        
+        const componentType = componentMatch[1]
+        const attributes = componentMatch[2] ? componentMatch[2].slice(1, -1) : ''
+        
+        // 查找结束标签
+        const endIndex = lines.findIndex((line: string, i: number) => i > 0 && line.trim() === ':::')
+        if (endIndex === -1) return
+        
+        const content = lines.slice(1, endIndex).join('\n').trim()
+        
+        // 创建新的HTML节点 - 使用correct type for remark
+        const customNode = {
+          type: 'html',
+          value: `<div data-component="${componentType}" data-attributes="${attributes}" data-content="${content.replace(/"/g, '&quot;')}">${content}</div>`
+        }
+        
+        // 替换原节点
+        if (parent && typeof index === 'number') {
+          parent.children[index] = customNode
+        }
+      }
+    })
+  }
+}
+
+// 处理高亮文本的remark插件
+const remarkHighlight = () => {
+  return (tree: any) => {
+    visit(tree, 'text', (node, index, parent) => {
+      const text = node.value
+      if (text && text.includes('==')) {
+        const parts = text.split(/(==.*?==)/g)
+        if (parts.length > 1) {
+          const newChildren: any[] = []
+          
+          parts.forEach((part: string) => {
+            if (part.startsWith('==') && part.endsWith('==')) {
+              // 高亮文本
+              newChildren.push({
+                type: 'html',
+                value: `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${part.slice(2, -2)}</mark>`
+              })
+            } else if (part) {
+              // 普通文本
+              newChildren.push({
+                type: 'text',
+                value: part
+              })
+            }
+          })
+          
+          if (parent && typeof index === 'number' && newChildren.length > 0) {
+            parent.children.splice(index, 1, ...newChildren)
+            return index + newChildren.length - 1 // 跳过新插入的节点
+          }
+        }
+      }
+    })
+  }
 }
 
 // 自定义组件映射
@@ -283,6 +363,77 @@ const customComponents = {
         </AlertDescription>
       </Alert>
     )
+  },
+  
+  // 处理自定义组件语法
+  div: ({ 'data-component': component, 'data-attributes': attributes, 'data-content': content, children, ...props }: any) => {
+    if (!component) {
+      return <div {...props}>{children}</div>
+    }
+    
+    // 解析属性
+    const attrs: any = {}
+    if (attributes) {
+      // 简单的属性解析 type="info" -> {type: "info"}
+      const attrMatches = attributes.match(/(\w+)="([^"]+)"/g)
+      if (attrMatches) {
+        attrMatches.forEach((match: string) => {
+          const [, key, value] = match.match(/(\w+)="([^"]+)"/) || []
+          if (key && value) attrs[key] = value
+        })
+      }
+    }
+    
+    switch (component) {
+      case 'button':
+        return (
+          <div className="my-4">
+            <Button variant="default" size="default">
+              {content}
+            </Button>
+          </div>
+        )
+      
+      case 'alert':
+        const icons = {
+          info: Info,
+          warning: AlertTriangle,
+          success: CheckCircle,
+          error: AlertTriangle,
+        }
+        const Icon = icons[attrs.type as keyof typeof icons] || Info
+        
+        return (
+          <Alert className="my-4">
+            <Icon className="h-4 w-4" />
+            <AlertDescription>
+              {content}
+            </AlertDescription>
+          </Alert>
+        )
+      
+      case 'card':
+        return (
+          <Card className="my-4">
+            <CardContent className="pt-6">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[rehypeHighlight]}
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="ml-4 space-y-1">{children}</ul>,
+                  li: ({ children }) => <li className="marker:text-primary">{children}</li>
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            </CardContent>
+          </Card>
+        )
+      
+      default:
+        return <div {...props}>{children}</div>
+    }
   }
 }
 
@@ -304,8 +455,11 @@ export function MDXRenderer({ content }: MDXRendererProps) {
           remarkGfm,        // GitHub Flavored Markdown (表格、删除线、任务列表等)
           remarkMath,       // 数学公式支持
           remarkToc,        // 目录生成
+          remarkCustomComponents, // 自定义组件解析
+          remarkHighlight,  // 高亮文本处理
         ]}
         rehypePlugins={[
+          rehypeRaw,        // 处理原始HTML
           rehypeSlug,       // 为标题添加 id
           rehypeHighlight,  // 代码高亮
           rehypeKatex,      // 数学公式渲染

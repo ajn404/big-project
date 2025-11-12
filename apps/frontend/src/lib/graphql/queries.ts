@@ -6,10 +6,13 @@ export const GET_PRACTICE_NODES = gql`
       id
       title
       description
+      content
       date
       difficulty
       estimatedTime
       contentType
+      componentName
+      prerequisites
       category {
         id
         name
@@ -61,10 +64,13 @@ export const SEARCH_PRACTICE_NODES = gql`
       id
       title
       description
+      content
       date
       difficulty
       estimatedTime
       contentType
+      componentName
+      prerequisites
       category {
         id
         name
@@ -120,10 +126,13 @@ export const GET_PRACTICE_NODES_BY_CATEGORY = gql`
       id
       title
       description
+      content
       date
       difficulty
       estimatedTime
       contentType
+      componentName
+      prerequisites
       category {
         id
         name
@@ -146,10 +155,13 @@ export const GET_PRACTICE_NODES_BY_TAGS = gql`
       id
       title
       description
+      content
       date
       difficulty
       estimatedTime
       contentType
+      componentName
+      prerequisites
       category {
         id
         name
