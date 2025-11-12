@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle
+  Dialog, DialogContent
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +10,70 @@ import {
   Search, FileText, Clock, Tag, Folder, ArrowRight, Loader2, X
 } from 'lucide-react'
 import { formatDate, getDifficultyColor, getDifficultyLabel } from '@/lib/utils'
+
+// 高亮文本工具函数
+function highlightText(text: string, query: string): JSX.Element[] {
+  if (!query.trim()) return [<span key={0}>{text}</span>]
+  
+  const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
+  return parts.map((part, index) => 
+    part.toLowerCase() === query.toLowerCase() ? (
+      <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 text-foreground font-medium px-0.5 rounded">
+        {part}
+      </mark>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  )
+}
+
+// 清理Markdown语法的函数
+function cleanMarkdownContent(content: string): string {
+  return content
+    .replace(/#{1,6}\s/g, '') // 移除标题标记
+    .replace(/\*\*(.*?)\*\*/g, '$1') // 移除粗体标记
+    .replace(/\*(.*?)\*/g, '$1') // 移除斜体标记
+    .replace(/`(.*?)`/g, '$1') // 移除行内代码标记
+    .replace(/```[\s\S]*?```/g, '[代码块]') // 替换代码块
+    .replace(/:::.*?:::/gs, '[组件]') // 替换自定义组件
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // 移除链接，保留文本
+    .replace(/>\s*/g, '') // 移除引用标记
+    .replace(/-\s*/g, '') // 移除列表标记
+    .replace(/\d+\.\s*/g, '') // 移除有序列表标记
+    .replace(/\n+/g, ' ') // 替换换行为空格
+    .replace(/\s+/g, ' ') // 合并多个空格
+    .trim()
+}
+
+// 内容截取和高亮函数
+function getHighlightedContent(content: string, query: string, maxLength: number = 150): JSX.Element[] {
+  if (!query.trim()) return [<span key={0}>{content.slice(0, maxLength)}...</span>]
+  
+  // 清理Markdown内容，获得纯文本
+  const cleanContent = cleanMarkdownContent(content)
+  const lowerQuery = query.toLowerCase()
+  const lowerContent = cleanContent.toLowerCase()
+  const matchIndex = lowerContent.indexOf(lowerQuery)
+  
+  if (matchIndex === -1) {
+    // 没有匹配，显示开头部分
+    return [<span key={0}>{cleanContent.slice(0, maxLength)}...</span>]
+  }
+  
+  // 计算截取范围，确保匹配内容在中间
+  const start = Math.max(0, matchIndex - Math.floor(maxLength / 3))
+  const end = Math.min(cleanContent.length, start + maxLength)
+  const excerpt = cleanContent.slice(start, end)
+  
+  const prefix = start > 0 ? '...' : ''
+  const suffix = end < cleanContent.length ? '...' : ''
+  
+  return [
+    <span key={0}>{prefix}</span>,
+    ...highlightText(excerpt, query),
+    <span key={2}>{suffix}</span>
+  ]
+}
 import { useFilter } from '@/contexts/filter-context'
 import { useSearchPracticeNodes } from '@/hooks/useSearchPracticeNodes'
 
@@ -52,14 +116,13 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   const clearSearch = useCallback(() => setQuery(''), [])
 
-  // 🎹 快捷键逻辑
+  // 🎹 Escape键关闭逻辑
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      if (e.key === 'Escape' && isOpen) {
         e.preventDefault()
-        if (!isOpen) setQuery('')
+        onClose()
       }
-      if (e.key === 'Escape' && isOpen) onClose()
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
@@ -110,11 +173,20 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                  {node.title}
+                  {highlightText(node.title, query)}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                  {node.description}
+                  {highlightText(node.description, query)}
                 </p>
+                {/* 显示内容片段（如果内容中包含搜索词） */}
+                {node.content && node.content.toLowerCase().includes(query.toLowerCase()) && (
+                  <div className="text-sm text-muted-foreground mt-2 p-2 bg-muted/30 rounded border-l-2 border-primary/30">
+                    <div className="text-xs text-muted-foreground mb-1 font-medium">内容片段：</div>
+                    <div className="italic">
+                      {getHighlightedContent(node.content, query, 120)}
+                    </div>
+                  </div>
+                )}
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors ml-2 flex-shrink-0" />
             </div>
@@ -129,7 +201,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                   }}
                   className="hover:text-primary transition-colors"
                 >
-                  {node.category.name}
+                  {highlightText(node.category.name, query)}
                 </button>
               </div>
 
@@ -158,7 +230,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
                     className="inline-flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   >
                     <Tag className="h-3 w-3" />
-                    {tag.name}
+                    {highlightText(tag.name, query)}
                   </button>
                 ))}
               </div>
@@ -176,9 +248,6 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[60vw] h-[50vh] p-10 gap-0 overflow-auto">
-        <DialogHeader className="p-4 pb-0">
-          <DialogTitle className="sr-only">全局搜索</DialogTitle>
-        </DialogHeader>
 
         {/* 顶部输入区 */}
         <div className="sticky top-0 px-4 pb-2">

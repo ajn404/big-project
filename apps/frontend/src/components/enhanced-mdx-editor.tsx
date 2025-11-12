@@ -73,7 +73,7 @@ export function EnhancedMDXEditor({
     {
       name: 'Card',
       description: '卡片布局',
-      template: `:::card\n123:::`
+      template: `:::card\n123\n:::\n`
     },
     {
       name: 'Highlight',
