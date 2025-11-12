@@ -22,16 +22,18 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const handleFilterClick = (type: 'category' | 'tag', value: string) => {
     onClose()
     
-    if (location.pathname === '/practice') {
+    if (location.pathname === '/practice' && onFilterSelect) {
       // 如果当前在 practice 页面，使用回调函数
-      onFilterSelect?.(type, value)
+      onFilterSelect(type, value)
     } else {
-      // 如果不在 practice 页面，导航到 practice 页面
-      navigate('/practice')
-      // 延迟调用筛选，确保页面已经加载
-      setTimeout(() => {
-        onFilterSelect?.(type, value)
-      }, 100)
+      // 如果不在 practice 页面，导航到 practice 页面并通过URL参数传递筛选条件
+      const params = new URLSearchParams()
+      if (type === 'category') {
+        params.set('category', value)
+      } else {
+        params.set('tag', value)
+      }
+      navigate(`/practice?${params.toString()}`)
     }
   }
 

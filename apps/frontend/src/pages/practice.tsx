@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { flushSync } from 'react-dom'
+import { useSearchParams } from 'react-router-dom'
 import { FilterProvider } from '@/contexts/filter-context'
 import { PracticeGrid } from '@/components/practice-grid'
 import { PracticeFilters } from '@/components/practice-filters'
@@ -8,9 +9,30 @@ import { PracticeSearchBar } from '@/components/practice-search-bar'
 import { useSearchPracticeNodes } from '@/hooks/useSearchPracticeNodes'
 
 export function PracticePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  // 从URL参数读取初始筛选条件
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    const tagParam = searchParams.get('tag')
+    
+    if (categoryParam) {
+      setSelectedCategory(categoryParam)
+      setSearchQuery('')
+      setSelectedTags([])
+      // 清除URL参数
+      setSearchParams({})
+    } else if (tagParam) {
+      setSelectedTags([tagParam])
+      setSearchQuery('')
+      setSelectedCategory('')
+      // 清除URL参数
+      setSearchParams({})
+    }
+  }, [searchParams, setSearchParams])
 
   const handleExternalFilter = useCallback((type: 'category' | 'tag', value: string) => {
     flushSync(() => {
