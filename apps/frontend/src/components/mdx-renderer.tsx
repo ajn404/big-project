@@ -14,49 +14,173 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink } from 'lucide-react'
+import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Play } from 'lucide-react'
+import { ComponentRenderer } from './component-renderer'
 
 interface MDXRendererProps {
   content: string
 }
 
-// 自定义remark插件，用于解析:::组件语法
+// 代码沙箱组件
+const CodeSandbox = ({ code }: { code: string }) => {
+  const [result, setResult] = React.useState<JSX.Element | null>(null)
+  const [error, setError] = React.useState<string | null>(null)
+
+  const executeCode = () => {
+    try {
+      setError(null)
+      
+      // 创建一个安全的沙箱环境
+      const { useState, useEffect, useMemo, useCallback } = React
+      
+      // 创建函数体，提供React hooks
+      const functionBody = `
+        const React = arguments[0];
+        const { useState, useEffect, useMemo, useCallback } = arguments[1];
+        
+        ${code}
+      `
+      console.log(code,'functionBody')
+      // 执行代码
+      const ComponentFunction = new Function(functionBody)
+      const Component = ComponentFunction(React, { useState, useEffect, useMemo, useCallback })
+      
+      if (React.isValidElement(Component)) {
+        setResult(Component)
+      } else {
+        setError('代码必须返回一个有效的React元素')
+      }
+    } catch (err: any) {
+      setError(err.message || '代码执行出错')
+    }
+  }
+
+  React.useEffect(() => {
+    executeCode()
+  }, [code])
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden my-6">
+      <div className="bg-muted px-4 py-2 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Play className="h-4 w-4" />
+          <span className="font-medium text-sm">代码沙箱</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={executeCode}
+          className="h-6 px-2"
+        >
+          <Play className="h-3 w-3 mr-1" />
+          运行
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+        {/* 代码区域 */}
+        <div className="border-r border-border">
+          <div className="bg-muted/50 px-3 py-1 text-xs text-muted-foreground border-b border-border">
+            代码编辑器
+          </div>
+          <pre className="p-4 text-sm font-mono bg-background overflow-x-auto max-h-64">
+            <code>{code}</code>
+          </pre>
+        </div>
+        
+        {/* 渲染结果 */}
+        <div>
+          <div className="bg-muted/50 px-3 py-1 text-xs text-muted-foreground border-b border-border">
+            渲染结果
+          </div>
+          <div className="p-4 min-h-32">
+            {error ? (
+              <Alert className="border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-red-700 dark:text-red-300">
+                  {error}
+                </AlertDescription>
+              </Alert>
+            ) : result ? (
+              <div className="space-y-4">{result}</div>
+            ) : (
+              <div className="text-muted-foreground text-sm">等待代码执行...</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- 替换 remarkCustomComponents ---
 const remarkCustomComponents = () => {
   return (tree: any) => {
-    // 处理组件语法 :::component:::
-    visit(tree, 'paragraph', (node, index, parent) => {
-      // 检查段落的第一个子元素是否为文本且以:::开头
-      if (node.children && node.children.length === 1 && 
-          node.children[0].type === 'text' && 
-          node.children[0].value.startsWith(':::')) {
-        
-        const text = node.children[0].value
-        const lines = text.split('\n')
-        const openTag = lines[0]
-        
-        // 解析组件类型和属性
-        const componentMatch = openTag.match(/:::(\w+)(\{[^}]+\})?/)
-        if (!componentMatch) return
-        
-        const componentType = componentMatch[1]
-        const attributes = componentMatch[2] ? componentMatch[2].slice(1, -1) : ''
-        
-        // 查找结束标签
-        const endIndex = lines.findIndex((line: string, i: number) => i > 0 && line.trim() === ':::')
-        if (endIndex === -1) return
-        
-        const content = lines.slice(1, endIndex).join('\n').trim()
-        
-        // 创建新的HTML节点 - 使用correct type for remark
-        const customNode = {
+    const blocks: any[] = []
+
+    visit(tree, 'text', (node) => {
+      const value = node.value
+      if (!value) return
+
+      // 支持多行内容 + 属性 + JSX
+      const regex = /^:::(\w+)(?:\{([\s\S]*?)\})?\n([\s\S]*?)^:::/gm
+      let match
+
+      while ((match = regex.exec(value)) !== null) {
+        const [, type, attrRaw, content] = match
+        const attributes = attrRaw?.trim() || ''
+
+        blocks.push({
+          type,
+          attributes,
+          content: content.trim()
+        })
+      }
+    })
+    if (!blocks.length) return
+
+    // 遍历树替换节点
+    visit(tree, 'text', (node, index, parent) => {
+      const value = node.value
+      if (!value) return
+
+      const regex = /^:::(\w+)(?:\{([\s\S]*?)\})?\n([\s\S]*?)^:::/gm
+      let match
+      const newNodes: any[] = []
+      let lastIndex = 0
+
+      while ((match = regex.exec(value)) !== null) {
+        const [fullMatch, type, attrRaw, content] = match
+        const start = match.index
+        const end = start + fullMatch.length
+
+        // 添加前面的普通文本
+        if (start > lastIndex) {
+          newNodes.push({
+            type: 'text',
+            value: value.slice(lastIndex, start)
+          })
+        }
+
+        // 插入自定义组件HTML
+        newNodes.push({
           type: 'html',
-          value: `<div data-component="${componentType}" data-attributes="${attributes}" data-content="${content.replace(/"/g, '&quot;')}">${content}</div>`
-        }
-        
-        // 替换原节点
-        if (parent && typeof index === 'number') {
-          parent.children[index] = customNode
-        }
+          value: `<div data-component="${type}" data-attributes="${(attrRaw || '').replace(/"/g, '&quot;')}" data-content="${content.replace(/"/g, '&quot;')}"></div>`
+        })
+
+        lastIndex = end
+      }
+
+      // 添加剩余文本
+      if (lastIndex < value.length) {
+        newNodes.push({
+          type: 'text',
+          value: value.slice(lastIndex)
+        })
+      }
+
+      if (newNodes.length && parent && typeof index === 'number') {
+        parent.children.splice(index, 1, ...newNodes)
       }
     })
   }
@@ -383,6 +507,9 @@ const customComponents = {
         })
       }
     }
+
+    console.log(`${attrs}`, 'attrs', attributes,props)
+
     
     switch (component) {
       case 'button':
@@ -416,19 +543,61 @@ const customComponents = {
         return (
           <Card className="my-4">
             <CardContent className="pt-6">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeHighlight]}
-                components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                  ul: ({ children }) => <ul className="ml-4 space-y-1">{children}</ul>,
-                  li: ({ children }) => <li className="marker:text-primary">{children}</li>
-                }}
-              >
-                {content}
-              </ReactMarkdown>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                {content.split('\n').map((line: string, index: number) => {
+                  if (line.startsWith('## ')) {
+                    return <h3 key={index} className="font-semibold mb-2 mt-3 first:mt-0">{line.slice(3)}</h3>
+                  } else if (line.startsWith('# ')) {
+                    return <h2 key={index} className="font-bold mb-2 mt-3 first:mt-0">{line.slice(2)}</h2>
+                  } else if (line.startsWith('- ')) {
+                    return <div key={index} className="flex items-start space-x-2"><span>•</span><span>{line.slice(2)}</span></div>
+                  } else if (line.includes('**') && line.includes('**')) {
+                    const parts = line.split(/(\*\*.*?\*\*)/g)
+                    return (
+                      <p key={index} className="mb-2 last:mb-0">
+                        {parts.map((part: string, i: number) => 
+                          part.startsWith('**') && part.endsWith('**') 
+                            ? <strong key={i}>{part.slice(2, -2)}</strong>
+                            : part
+                        )}
+                      </p>
+                    )
+                  } else if (line.trim()) {
+                    return <p key={index} className="mb-2 last:mb-0">{line}</p>
+                  }
+                  return null
+                })}
+              </div>
             </CardContent>
           </Card>
+        )
+        
+      case 'react':
+        // 渲染component-renderer.tsx中的React组件
+        const componentName = attrs.component
+        if (componentName) {
+          return (
+            <div className="my-6">
+              <ComponentRenderer componentName={componentName} props={{}} />
+            </div>
+          )
+        }
+        return (
+          <Alert className="my-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              React组件名称未指定。请使用格式：:::react{`{component="ComponentName"}`}:::
+            </AlertDescription>
+          </Alert>
+        )
+        
+      case 'sandbox':
+        console.log('content', content)
+        // 代码沙箱组件
+        return (
+          <div className="my-6">
+            <CodeSandbox code={content} />
+          </div>
         )
       
       default:

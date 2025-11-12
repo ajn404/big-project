@@ -1,14 +1,14 @@
 import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Bold, 
-  Italic, 
-  Code, 
-  Link, 
-  List, 
-  ListOrdered, 
-  Quote, 
+import {
+  Bold,
+  Italic,
+  Code,
+  Link,
+  List,
+  ListOrdered,
+  Quote,
   Image,
   Eye,
   EyeOff,
@@ -28,9 +28,9 @@ interface EnhancedMDXEditorProps {
   height?: string
 }
 
-export function EnhancedMDXEditor({ 
-  value, 
-  onChange, 
+export function EnhancedMDXEditor({
+  value,
+  onChange,
   placeholder = "输入 Markdown 内容...",
   height = "400px"
 }: EnhancedMDXEditorProps) {
@@ -38,49 +38,112 @@ export function EnhancedMDXEditor({
   const [showComponentMenu, setShowComponentMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // 组件模板库 - 使用兼容ReactMarkdown的格式
+  // 组件模板库 - 分类组织
   const componentTemplates = [
+    // 基础UI组件
     {
       name: 'Button',
       description: '按钮组件',
+      category: 'UI组件',
       template: `:::button\n点击我\n:::`
-    },
-    {
-      name: 'Alert-Info',
-      description: '信息提示',
-      template: `:::alert{type="info"}\n这是一个信息提示\n:::`
-    },
-    {
-      name: 'Alert-Warning', 
-      description: '警告提示',
-      template: `:::alert{type="warning"}\n这是一个警告提示\n:::`
-    },
-    {
-      name: 'Alert-Success',
-      description: '成功提示', 
-      template: `:::alert{type="success"}\n这是一个成功提示\n:::`
-    },
-    {
-      name: 'Alert-Error',
-      description: '错误提示',
-      template: `:::alert{type="error"}\n这是一个错误提示\n:::`
-    },
-    {
-      name: 'CodeBlock',
-      description: '代码块',
-      template: `\`\`\`typescript\nconst example = () => {\n  return (\n    <div>\n      <h1>Hello World</h1>\n    </div>\n  )\n}\n\`\`\``
     },
     {
       name: 'Card',
       description: '卡片布局',
-      template: `:::card\n123\n:::\n`
+      category: 'UI组件',
+      template: `:::card\n## 卡片标题\n\n这是卡片内容，支持**Markdown**格式。\n\n- 列表项1\n- 列表项2\n:::`
     },
+
+    // 提示组件
+    {
+      name: 'Info Alert',
+      description: '信息提示',
+      category: '提示组件',
+      template: `:::alert{type="info"}\n这是一个信息提示\n:::`
+    },
+    {
+      name: 'Warning Alert',
+      description: '警告提示',
+      category: '提示组件',
+      template: `:::alert{type="warning"}\n这是一个警告提示\n:::`
+    },
+    {
+      name: 'Success Alert',
+      description: '成功提示',
+      category: '提示组件',
+      template: `:::alert{type="success"}\n这是一个成功提示\n:::`
+    },
+    {
+      name: 'Error Alert',
+      description: '错误提示',
+      category: '提示组件',
+      template: `:::alert{type="error"}\n这是一个错误提示\n:::`
+    },
+
+    // React组件 (来自component-renderer.tsx)
+    {
+      name: 'ThreeScene',
+      description: '3D场景组件',
+      category: 'React组件',
+      template: `:::react{component="ThreeScene"}\n3D场景渲染组件\n:::`
+    },
+    {
+      name: 'ExampleCard',
+      description: '示例卡片',
+      category: 'React组件',
+      template: `:::react{component="ExampleCard"}\n示例React组件，展示卡片布局和内容\n:::`
+    },
+    {
+      name: 'InteractiveDemo',
+      description: '交互式演示',
+      category: 'React组件',
+      template: `:::react{component="InteractiveDemo"}\n交互式演示组件，包含动画效果\n:::`
+    },
+
+    // 代码相关
+    {
+      name: 'TypeScript',
+      description: 'TypeScript代码',
+      category: '代码块',
+      template: `\`\`\`typescript\ninterface User {\n  id: number\n  name: string\n  email: string\n}\n\nconst user: User = {\n  id: 1,\n  name: 'John Doe',\n  email: 'john@example.com'\n}\n\`\`\``
+    },
+    {
+      name: 'React Component',
+      description: 'React组件代码',
+      category: '代码块',
+      template: `\`\`\`tsx\nimport React from 'react'\n\ninterface Props {\n  title: string\n  children: React.ReactNode\n}\n\nconst MyComponent: React.FC<Props> = ({ title, children }) => {\n  return (\n    <div className="component">\n      <h2>{title}</h2>\n      <div>{children}</div>\n    </div>\n  )\n}\n\nexport default MyComponent\n\`\`\``
+    },
+    {
+      name: 'Code Sandbox',
+      description: '代码沙箱',
+      category: '代码块',
+      template: `:::sandbox\nconsole.log(1)
+const {createElement} = React;
+return createElement(
+    'h1',
+    { className: 'greeting' },
+    'Hello'
+  );\n:::`
+    },
+
+    // 文本格式
     {
       name: 'Highlight',
       description: '高亮文本',
-      template: `这是一段包含 ==高亮文本== 的内容。`
+      category: '文本格式',
+      template: `这是一段包含 ==高亮文本== 的内容。你可以用这种方式突出显示==重要信息==。`
     }
   ]
+
+  // 按分类分组组件
+  const groupedTemplates = componentTemplates.reduce((groups, template) => {
+    const category = template.category || '其他'
+    if (!groups[category]) {
+      groups[category] = []
+    }
+    groups[category].push(template)
+    return groups
+  }, {} as Record<string, typeof componentTemplates>)
 
   // 工具栏操作
   const insertText = (before: string, after: string = '', defaultText: string = '') => {
@@ -91,12 +154,12 @@ export function EnhancedMDXEditor({
     const end = textarea.selectionEnd
     const selectedText = textarea.value.substring(start, end)
     const textToInsert = selectedText || defaultText
-    
-    const newText = 
+
+    const newText =
       textarea.value.substring(0, start) +
       before + textToInsert + after +
       textarea.value.substring(end)
-    
+
     onChange(newText)
 
     // 重新聚焦并设置光标位置
@@ -115,17 +178,17 @@ export function EnhancedMDXEditor({
     const start = textarea.selectionStart
     const beforeCursor = textarea.value.substring(0, start)
     const afterCursor = textarea.value.substring(start)
-    
+
     // 检查是否需要添加换行符
     const needsNewlineBefore = beforeCursor.length > 0 && !beforeCursor.endsWith('\n')
     const needsNewlineAfter = afterCursor.length > 0 && !afterCursor.startsWith('\n')
-    
+
     const prefix = needsNewlineBefore ? '\n' : ''
     const suffix = needsNewlineAfter ? '\n' : ''
-    
+
     const newText = beforeCursor + prefix + text + suffix + afterCursor
     onChange(newText)
-    
+
     setTimeout(() => {
       textarea.focus()
       const newPosition = start + prefix.length + text.length
@@ -162,35 +225,35 @@ export function EnhancedMDXEditor({
     {
       group: '插入',
       buttons: [
-        { 
-          icon: Link, 
-          label: '链接', 
-          action: () => insertText('[', '](url)', '链接文本') 
+        {
+          icon: Link,
+          label: '链接',
+          action: () => insertText('[', '](url)', '链接文本')
         },
-        { 
-          icon: Image, 
-          label: '图片', 
-          action: () => insertText('![', '](image-url)', '图片描述') 
+        {
+          icon: Image,
+          label: '图片',
+          action: () => insertText('![', '](image-url)', '图片描述')
         },
-        { 
-          icon: Table, 
-          label: '表格', 
-          action: () => insertAtNewLine('| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |') 
+        {
+          icon: Table,
+          label: '表格',
+          action: () => insertAtNewLine('| 列1 | 列2 | 列3 |\n|-----|-----|-----|\n| 内容1 | 内容2 | 内容3 |')
         },
-        { 
-          icon: Minus, 
-          label: '分割线', 
-          action: () => insertAtNewLine('---') 
+        {
+          icon: Minus,
+          label: '分割线',
+          action: () => insertAtNewLine('---')
         },
       ]
     },
     {
       group: '组件',
       buttons: [
-        { 
-          icon: Component, 
-          label: '插入组件', 
-          action: () => setShowComponentMenu(!showComponentMenu) 
+        {
+          icon: Component,
+          label: '插入组件',
+          action: () => setShowComponentMenu(!showComponentMenu)
         },
       ]
     }
@@ -267,9 +330,9 @@ export function EnhancedMDXEditor({
               )}
             </div>
           ))}
-          
+
           <div className="w-px h-6 bg-border mx-1" />
-          
+
           {/* 预览切换 */}
           <Button
             variant={isPreview ? "default" : "ghost"}
@@ -290,27 +353,8 @@ export function EnhancedMDXEditor({
       {/* 组件选择菜单 */}
       {showComponentMenu && (
         <div className="bg-background border-b border-border p-4">
-          <h4 className="text-sm font-medium mb-3">选择要插入的组件：</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {componentTemplates.map((component, index) => (
-              <Button
-                key={index}
-                variant="outline"
-                size="sm"
-                className="h-auto p-3 flex flex-col items-start text-left"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  insertAtNewLine(component.template)
-                  setShowComponentMenu(false)
-                }}
-              >
-                <div className="font-medium text-sm">{component.name}</div>
-                <div className="text-xs text-muted-foreground mt-1">{component.description}</div>
-              </Button>
-            ))}
-          </div>
-          <div className="mt-3">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-medium">选择要插入的组件：</h4>
             <Button
               variant="ghost"
               size="sm"
@@ -320,8 +364,51 @@ export function EnhancedMDXEditor({
                 setShowComponentMenu(false)
               }}
             >
-              取消
+              ✕
             </Button>
+          </div>
+
+          {/* 分组显示组件 */}
+          <div className="space-y-4 max-h-64 overflow-y-auto">
+            {Object.entries(groupedTemplates).map(([category, templates]) => (
+              <div key={category}>
+                <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                  {category}
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {templates.map((component, index) => (
+                    <Button
+                      key={`${category}-${index}`}
+                      variant="outline"
+                      size="sm"
+                      className="h-auto p-3 flex flex-col items-start text-left hover:bg-primary/5 hover:border-primary/20 transition-all"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        insertAtNewLine(component.template)
+                        setShowComponentMenu(false)
+                      }}
+                    >
+                      <div className="font-medium text-sm">{component.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {component.description}
+                      </div>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
+            <div className="text-xs text-blue-700 dark:text-blue-300">
+              <strong>💡 提示：</strong>
+              <ul className="mt-1 space-y-1 list-disc list-inside">
+                <li>React组件来自 component-renderer.tsx</li>
+                <li>Code Sandbox 支持自定义React代码</li>
+                <li>所有组件支持实时渲染和交互</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
@@ -340,7 +427,7 @@ export function EnhancedMDXEditor({
               className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
               style={{ minHeight: height }}
             />
-            
+
             {/* 行号 (可选) */}
             {/* <div className="absolute left-0 top-0 p-4 text-xs text-muted-foreground bg-muted/50 pointer-events-none">
               {value.split('\n').map((_, index) => (
@@ -372,7 +459,7 @@ export function EnhancedMDXEditor({
           <span>行数: {value.split('\n').length}</span>
           <span>预估阅读时间: {Math.ceil(value.length / 500)} 分钟</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* 快捷键提示 */}
           <div className="hidden md:flex items-center gap-2">
