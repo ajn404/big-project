@@ -76,6 +76,7 @@ function getHighlightedContent(content: string, query: string, maxLength: number
 }
 import { useFilter } from '@/contexts/filter-context'
 import { useSearchPracticeNodes } from '@/hooks/useSearchPracticeNodes'
+import { DialogTitle } from '@radix-ui/react-dialog'
 
 interface GlobalSearchProps {
   isOpen: boolean
@@ -248,7 +249,7 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[60vw] h-[50vh] p-10 gap-0 overflow-auto">
-
+        <DialogTitle>全局搜索</DialogTitle>
         {/* 顶部输入区 */}
         <div className="sticky top-0 px-4 pb-2">
           <div className="relative">

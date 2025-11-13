@@ -53,7 +53,6 @@ const CONTENT_TYPE_OPTIONS = [
 
 export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNodeFormProps) {
   const isEditing = !!node
-  const [previewMode, setPreviewMode] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -163,17 +162,6 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>{isEditing ? '编辑文章' : '创建新文章'}</CardTitle>
           <div className="flex items-center gap-2">
-            {formData.contentType === 'MDX' && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPreviewMode(!previewMode)}
-              >
-                {previewMode ? <Code className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                {previewMode ? '编辑' : '预览'}
-              </Button>
-            )}
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -239,19 +227,26 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
                 {/* Category */}
                 <div>
                   <label className="block text-sm font-medium mb-2">分类 *</label>
-                  <select
-                    className="w-full p-3 border border-input rounded-md"
-                    value={formData.categoryName}
-                    onChange={(e) => handleInputChange('categoryName', e.target.value)}
-                    required
-                  >
-                    <option value="">选择分类</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      value={formData.categoryName}
+                      onChange={(e) => handleInputChange('categoryName', e.target.value)}
+                      placeholder="输入分类名称或选择已有分类"
+                      list="categories-list"
+                      required
+                    />
+                    <datalist id="categories-list">
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </datalist>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    可选分类: {categories.map(cat => cat.name).slice(0, 5).join(', ')}
+                    {categories.length > 5 && '...'}
+                  </div>
                 </div>
 
                 {/* Difficulty */}

@@ -48,7 +48,7 @@ export class PracticeNodeService {
 
     if (query) {
       queryBuilder.andWhere(
-        '(practiceNode.title ILIKE :query OR practiceNode.description ILIKE :query)',
+        '(practiceNode.title ILIKE :query OR practiceNode.description ILIKE :query OR practiceNode.content ILIKE :query OR category.name ILIKE :query OR tags.name ILIKE :query)',
         { query: `%${query}%` }
       );
     }
