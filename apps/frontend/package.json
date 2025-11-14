@@ -12,6 +12,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@workspace/ui-components": "workspace:*",
     "@apollo/client": "^3.8.7",
     "@learning-practice/shared-types": "workspace:*",
     "@mdx-js/rollup": "^3.0.0",

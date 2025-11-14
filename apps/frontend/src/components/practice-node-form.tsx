@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { X, Save, Eye, Code } from 'lucide-react'
+import { X, Save } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
 
 interface Category {

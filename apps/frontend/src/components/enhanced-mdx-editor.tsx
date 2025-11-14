@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -20,6 +20,7 @@ import {
   Component
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
+import ComponentManager from '@/utils/component-manager'
 
 interface EnhancedMDXEditorProps {
   value: string
@@ -38,102 +39,98 @@ export function EnhancedMDXEditor({
   const [showComponentMenu, setShowComponentMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // 组件模板库 - 分类组织
-  const componentTemplates = [
-    // 基础UI组件
-    {
-      name: 'Button',
-      description: '按钮组件',
-      category: 'UI组件',
-      template: `:::button\n点击我\n:::`
-    },
-    {
-      name: 'Card',
-      description: '卡片布局',
-      category: 'UI组件',
-      template: `:::card\n## 卡片标题\n\n这是卡片内容，支持**Markdown**格式。\n\n- 列表项1\n- 列表项2\n:::`
-    },
+  // 组件模板库 - 动态从组件管理器获取
+  const [componentTemplates, setComponentTemplates] = useState<Array<{
+    name: string
+    description: string
+    category: string
+    template: string
+  }>>([])
 
-    // 提示组件
-    {
-      name: 'Info Alert',
-      description: '信息提示',
-      category: '提示组件',
-      template: `:::alert{type="info"}\n这是一个信息提示\n:::`
-    },
-    {
-      name: 'Warning Alert',
-      description: '警告提示',
-      category: '提示组件',
-      template: `:::alert{type="warning"}\n这是一个警告提示\n:::`
-    },
-    {
-      name: 'Success Alert',
-      description: '成功提示',
-      category: '提示组件',
-      template: `:::alert{type="success"}\n这是一个成功提示\n:::`
-    },
-    {
-      name: 'Error Alert',
-      description: '错误提示',
-      category: '提示组件',
-      template: `:::alert{type="error"}\n这是一个错误提示\n:::`
-    },
+  useEffect(() => {
+    // 获取注册的React组件
+    const registeredComponents = ComponentManager.generateMDXTemplates()
+    
+    // 静态模板
+    const staticTemplates = [
+      // 基础UI组件
+      {
+        name: 'Button',
+        description: '按钮组件',
+        category: 'UI组件',
+        template: `:::button\n点击我\n:::`
+      },
+      {
+        name: 'Card',
+        description: '卡片布局',
+        category: 'UI组件',
+        template: `:::card\n## 卡片标题\n\n这是卡片内容，支持**Markdown**格式。\n\n- 列表项1\n- 列表项2\n:::`
+      },
 
-    // React组件 (来自component-renderer.tsx)
-    {
-      name: 'ThreeScene',
-      description: '3D场景组件',
-      category: 'React组件',
-      template: `:::react{component="ThreeScene"}\n3D场景渲染组件\n:::`
-    },
-    {
-      name: 'ExampleCard',
-      description: '示例卡片',
-      category: 'React组件',
-      template: `:::react{component="ExampleCard"}\n示例React组件，展示卡片布局和内容\n:::`
-    },
-    {
-      name: 'InteractiveDemo',
-      description: '交互式演示',
-      category: 'React组件',
-      template: `:::react{component="InteractiveDemo"}\n交互式演示组件，包含动画效果\n:::`
-    },
+      // 提示组件
+      {
+        name: 'Info Alert',
+        description: '信息提示',
+        category: '提示组件',
+        template: `:::alert{type="info"}\n这是一个信息提示\n:::`
+      },
+      {
+        name: 'Warning Alert',
+        description: '警告提示',
+        category: '提示组件',
+        template: `:::alert{type="warning"}\n这是一个警告提示\n:::`
+      },
+      {
+        name: 'Success Alert',
+        description: '成功提示',
+        category: '提示组件',
+        template: `:::alert{type="success"}\n这是一个成功提示\n:::`
+      },
+      {
+        name: 'Error Alert',
+        description: '错误提示',
+        category: '提示组件',
+        template: `:::alert{type="error"}\n这是一个错误提示\n:::`
+      },
 
-    // 代码相关
-    {
-      name: 'TypeScript',
-      description: 'TypeScript代码',
-      category: '代码块',
-      template: `\`\`\`typescript\ninterface User {\n  id: number\n  name: string\n  email: string\n}\n\nconst user: User = {\n  id: 1,\n  name: 'John Doe',\n  email: 'john@example.com'\n}\n\`\`\``
-    },
-    {
-      name: 'React Component',
-      description: 'React组件代码',
-      category: '代码块',
-      template: `\`\`\`tsx\nimport React from 'react'\n\ninterface Props {\n  title: string\n  children: React.ReactNode\n}\n\nconst MyComponent: React.FC<Props> = ({ title, children }) => {\n  return (\n    <div className="component">\n      <h2>{title}</h2>\n      <div>{children}</div>\n    </div>\n  )\n}\n\nexport default MyComponent\n\`\`\``
-    },
-    {
-      name: 'Code Sandbox',
-      description: '代码沙箱',
-      category: '代码块',
-      template: `:::sandbox\nconsole.log(1)
+      // 代码相关
+      {
+        name: 'TypeScript',
+        description: 'TypeScript代码',
+        category: '代码块',
+        template: `\`\`\`typescript\ninterface User {\n  id: number\n  name: string\n  email: string\n}\n\nconst user: User = {\n  id: 1,\n  name: 'John Doe',\n  email: 'john@example.com'\n}\n\`\`\``
+      },
+      {
+        name: 'React Component',
+        description: 'React组件代码',
+        category: '代码块',
+        template: `\`\`\`tsx\nimport React from 'react'\n\ninterface Props {\n  title: string\n  children: React.ReactNode\n}\n\nconst MyComponent: React.FC<Props> = ({ title, children }) => {\n  return (\n    <div className="component">\n      <h2>{title}</h2>\n      <div>{children}</div>\n    </div>\n  )\n}\n\nexport default MyComponent\n\`\`\``
+      },
+      {
+        name: 'Code Sandbox',
+        description: '代码沙箱',
+        category: '代码块',
+        template: `:::sandbox\n
 const {createElement} = React;
 return createElement(
     'h1',
     { className: 'greeting' },
     'Hello'
   );\n:::`
-    },
+      },
 
-    // 文本格式
-    {
-      name: 'Highlight',
-      description: '高亮文本',
-      category: '文本格式',
-      template: `这是一段包含 ==高亮文本== 的内容。你可以用这种方式突出显示==重要信息==。`
-    }
-  ]
+      // 文本格式
+      {
+        name: 'Highlight',
+        description: '高亮文本',
+        category: '文本格式',
+        template: `这是一段包含 ==高亮文本== 的内容。你可以用这种方式突出显示==重要信息==。`
+      }
+    ]
+
+    // 合并静态模板和动态注册的组件
+    setComponentTemplates([...staticTemplates, ...registeredComponents])
+  }, [])
 
   // 按分类分组组件
   const groupedTemplates = componentTemplates.reduce((groups, template) => {
@@ -404,9 +401,10 @@ return createElement(
             <div className="text-xs text-blue-700 dark:text-blue-300">
               <strong>💡 提示：</strong>
               <ul className="mt-1 space-y-1 list-disc list-inside">
-                <li>React组件来自 component-renderer.tsx</li>
-                <li>Code Sandbox 支持自定义React代码</li>
+                <li>React组件来自注册的组件库</li>
+                <li>可以在组件管理页面添加新组件</li>
                 <li>所有组件支持实时渲染和交互</li>
+                <li>组件模板会自动同步到编辑器</li>
               </ul>
             </div>
           </div>
