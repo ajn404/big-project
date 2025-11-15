@@ -19,17 +19,17 @@ export const ThreeScene: React.FC<ThreeSceneProps> = ({
 }) => {
   return (
     <div 
-      className={`border rounded-lg overflow-hidden ${className}`}
+      className={`border rounded-lg overflow-hidden m-auto ${className}`}
       style={{ width, height }}
     >
       <div 
         className="w-full h-full flex items-center justify-center"
         style={{ backgroundColor }}
       >
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 rotate-45">
           <div className="text-2xl">🎲</div>
           <div className="text-sm text-gray-600">3D Scene</div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-gray-500 ">
             {width} × {height}
           </div>
         </div>
