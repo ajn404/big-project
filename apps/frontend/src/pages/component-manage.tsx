@@ -27,9 +27,12 @@ export default function ComponentManage() {
   const [, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('全部')
-  const [selectedComponent, setSelectedComponent] = useState<ComponentInfo | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [previewComponent, setPreviewComponent] = useState<ComponentInfo | null>(null)
+  const [editingComponent, setEditingComponent] = useState<ComponentInfo | null>(null)
+
+
   const [newComponent, setNewComponent] = useState<Partial<ComponentInfo>>({
     name: '',
     description: '',
@@ -58,11 +61,10 @@ export default function ComponentManage() {
   // 过滤组件
   const filteredComponents = components.filter(component => {
     const matchesSearch = component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         component.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         component.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-    
+      component.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      component.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+
     const matchesCategory = selectedCategory === '全部' || component.category === selectedCategory
-    
     return matchesSearch && matchesCategory
   })
 
@@ -94,10 +96,10 @@ export default function ComponentManage() {
 
     // 使用 ComponentManager 注册组件
     ComponentManager.registerComponent(componentId, null, componentData)
-    
+
     // 刷新组件列表
     loadComponents()
-    
+
     // 重置表单
     setNewComponent({
       name: '',
@@ -111,7 +113,7 @@ export default function ComponentManage() {
 
   // 编辑组件
   const handleEditComponent = () => {
-    if (!selectedComponent || !newComponent.name || !newComponent.description || !newComponent.template) {
+    if (!editingComponent || !newComponent.name || !newComponent.description || !newComponent.template) {
       alert('请填写所有必填字段')
       return
     }
@@ -126,16 +128,16 @@ export default function ComponentManage() {
     }
 
     // 使用 ComponentManager 更新组件
-    const success = ComponentManager.updateComponent(selectedComponent.id, updates)
-    
+    const success = ComponentManager.updateComponent(editingComponent.id, updates)
+
     if (success) {
       // 刷新组件列表
       loadComponents()
-      
+
       // 关闭编辑对话框
       setIsEditDialogOpen(false)
-      setSelectedComponent(null)
-      
+      setEditingComponent(null)
+
       // 重置表单
       setNewComponent({
         name: '',
@@ -163,7 +165,7 @@ export default function ComponentManage() {
 
   // 开始编辑组件
   const startEditComponent = (component: ComponentInfo) => {
-    setSelectedComponent(component)
+    setEditingComponent(component)
     setNewComponent({
       name: component.name,
       description: component.description,
@@ -173,6 +175,7 @@ export default function ComponentManage() {
     })
     setIsEditDialogOpen(true)
   }
+
 
   // 导出组件配置
   const handleExportComponents = () => {
@@ -196,18 +199,18 @@ export default function ComponentManage() {
             管理可在文章中插入的 React 组件
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={loadComponents}>
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新
           </Button>
-          
+
           <Button variant="outline" onClick={handleExportComponents}>
             <Download className="h-4 w-4 mr-2" />
             导出配置
           </Button>
-          
+
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -222,14 +225,14 @@ export default function ComponentManage() {
                   创建一个新的可重用组件模板
                 </DialogDescription>
               </DialogHeader>
-              
+
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium">组件名称</label>
                     <Input
                       value={newComponent.name}
-                      onChange={(e) => setNewComponent({...newComponent, name: e.target.value})}
+                      onChange={(e) => setNewComponent({ ...newComponent, name: e.target.value })}
                       placeholder="MyComponent"
                     />
                   </div>
@@ -237,7 +240,7 @@ export default function ComponentManage() {
                     <label className="text-sm font-medium">分类</label>
                     <select
                       value={newComponent.category}
-                      onChange={(e) => setNewComponent({...newComponent, category: e.target.value as ComponentCategory})}
+                      onChange={(e) => setNewComponent({ ...newComponent, category: e.target.value as ComponentCategory })}
                       className="w-full h-10 px-3 rounded-md border border-input bg-background"
                     >
                       {categories.slice(1).map(category => (
@@ -246,39 +249,39 @@ export default function ComponentManage() {
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium">描述</label>
                   <Input
                     value={newComponent.description}
-                    onChange={(e) => setNewComponent({...newComponent, description: e.target.value})}
+                    onChange={(e) => setNewComponent({ ...newComponent, description: e.target.value })}
                     placeholder="组件的功能描述"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium">模板代码</label>
                   <textarea
                     value={newComponent.template}
-                    onChange={(e) => setNewComponent({...newComponent, template: e.target.value})}
+                    onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
                     placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
                     className="w-full h-32 p-3 text-sm font-mono rounded-md border border-input bg-background resize-none"
                   />
                 </div>
-                
+
                 <div>
                   <label className="text-sm font-medium">标签 (逗号分隔)</label>
                   <Input
                     value={newComponent.tags?.join(', ')}
                     onChange={(e) => setNewComponent({
-                      ...newComponent, 
+                      ...newComponent,
                       tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
                     })}
                     placeholder="UI, 按钮, 交互"
                   />
                 </div>
               </div>
-              
+
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   取消
@@ -305,7 +308,7 @@ export default function ComponentManage() {
             />
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <select
@@ -333,7 +336,7 @@ export default function ComponentManage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -345,7 +348,7 @@ export default function ComponentManage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -357,7 +360,7 @@ export default function ComponentManage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
@@ -372,7 +375,7 @@ export default function ComponentManage() {
       </div>
 
       {/* 组件列表 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 gap-6">
         {filteredComponents.map((component) => (
           <Card key={component.id} className="group hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -386,7 +389,7 @@ export default function ComponentManage() {
                 <Badge variant="secondary">{component.category}</Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent>
               <div className="space-y-3">
                 {/* 标签 */}
@@ -399,45 +402,45 @@ export default function ComponentManage() {
                     ))}
                   </div>
                 )}
-                
+
                 {/* 模板预览 */}
                 <div className="bg-muted p-3 rounded text-xs font-mono overflow-x-auto">
-                  {component.template.length > 100 
-                    ? `${component.template.substring(0, 100)}...` 
+                  {component.template.length > 100
+                    ? `${component.template.substring(0, 100)}...`
                     : component.template}
                 </div>
-                
+
                 {/* 操作按钮 */}
                 <div className="flex items-center gap-2 pt-2">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => copyTemplate(component.template)}
                   >
                     <Copy className="h-3 w-3 mr-1" />
                     复制
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
-                    onClick={() => setSelectedComponent(component)}
+                    onClick={() => setPreviewComponent(component)}
                   >
                     <Eye className="h-3 w-3 mr-1" />
                     预览
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => startEditComponent(component)}
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     编辑
                   </Button>
-                  
-                  <Button 
-                    size="sm" 
+
+                  <Button
+                    size="sm"
                     variant="outline"
                     onClick={() => handleDeleteComponent(component.id)}
                     className="text-red-600 hover:text-red-700"
@@ -445,7 +448,7 @@ export default function ComponentManage() {
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
-                
+
                 {/* 元信息 */}
                 <div className="text-xs text-muted-foreground pt-2 border-t">
                   <div>版本: {component.version} | 作者: {component.author}</div>
@@ -481,14 +484,14 @@ export default function ComponentManage() {
               修改组件的配置信息
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium">组件名称</label>
                 <Input
                   value={newComponent.name}
-                  onChange={(e) => setNewComponent({...newComponent, name: e.target.value})}
+                  onChange={(e) => setNewComponent({ ...newComponent, name: e.target.value })}
                   placeholder="MyComponent"
                 />
               </div>
@@ -496,7 +499,7 @@ export default function ComponentManage() {
                 <label className="text-sm font-medium">分类</label>
                 <select
                   value={newComponent.category}
-                  onChange={(e) => setNewComponent({...newComponent, category: e.target.value as ComponentCategory})}
+                  onChange={(e) => setNewComponent({ ...newComponent, category: e.target.value as ComponentCategory })}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background"
                 >
                   {categories.slice(1).map(category => (
@@ -505,43 +508,43 @@ export default function ComponentManage() {
                 </select>
               </div>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">描述</label>
               <Input
                 value={newComponent.description}
-                onChange={(e) => setNewComponent({...newComponent, description: e.target.value})}
+                onChange={(e) => setNewComponent({ ...newComponent, description: e.target.value })}
                 placeholder="组件的功能描述"
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">模板代码</label>
               <textarea
                 value={newComponent.template}
-                onChange={(e) => setNewComponent({...newComponent, template: e.target.value})}
+                onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
                 placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
                 className="w-full h-32 p-3 text-sm font-mono rounded-md border border-input bg-background resize-none"
               />
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">标签 (逗号分隔)</label>
               <Input
                 value={Array.isArray(newComponent.tags) ? newComponent.tags.join(', ') : ''}
                 onChange={(e) => setNewComponent({
-                  ...newComponent, 
+                  ...newComponent,
                   tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
                 })}
                 placeholder="UI, 按钮, 交互"
               />
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => {
               setIsEditDialogOpen(false)
-              setSelectedComponent(null)
+              setEditingComponent(null)
               setNewComponent({
                 name: '',
                 description: '',
@@ -560,54 +563,54 @@ export default function ComponentManage() {
       </Dialog>
 
       {/* 组件详情预览对话框 */}
-      {selectedComponent && (
-        <Dialog open={!!selectedComponent} onOpenChange={() => setSelectedComponent(null)}>
+      {previewComponent && (
+        <Dialog open={!!previewComponent} onOpenChange={() => setPreviewComponent(null)}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Component className="h-5 w-5" />
-                {selectedComponent.name}
+                {previewComponent.name}
               </DialogTitle>
               <DialogDescription>
-                {selectedComponent.description}
+                {previewComponent.description}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               {/* 基本信息 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-medium mb-2">基本信息</h4>
                   <div className="space-y-2 text-sm">
-                    <div><strong>分类:</strong> {selectedComponent.category}</div>
-                    <div><strong>版本:</strong> {selectedComponent.version}</div>
-                    <div><strong>作者:</strong> {selectedComponent.author}</div>
-                    <div><strong>创建时间:</strong> {selectedComponent.createdAt?.toLocaleDateString()}</div>
+                    <div><strong>分类:</strong> {previewComponent.category}</div>
+                    <div><strong>版本:</strong> {previewComponent.version}</div>
+                    <div><strong>作者:</strong> {previewComponent.author}</div>
+                    <div><strong>创建时间:</strong> {previewComponent.createdAt?.toLocaleDateString()}</div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">标签</h4>
                   <div className="flex flex-wrap gap-1">
-                    {selectedComponent.tags?.map((tag, index) => (
+                    {previewComponent.tags?.map((tag, index) => (
                       <Badge key={index} variant="outline">{tag}</Badge>
                     ))}
                   </div>
                 </div>
               </div>
-              
+
               {/* 模板代码 */}
               <div>
                 <h4 className="font-medium mb-2">模板代码</h4>
                 <div className="bg-muted p-4 rounded-lg">
                   <pre className="text-sm font-mono whitespace-pre-wrap">
-                    {selectedComponent.template}
+                    {previewComponent.template}
                   </pre>
                 </div>
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="mt-2"
-                  onClick={() => copyTemplate(selectedComponent.template)}
+                  onClick={() => copyTemplate(previewComponent.template)}
                 >
                   <Copy className="h-3 w-3 mr-1" />
                   复制模板

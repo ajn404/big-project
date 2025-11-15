@@ -1,4 +1,3 @@
-import { componentRegistry } from './registry'
 import { ExampleCard } from './components/ExampleCard'
 import { InteractiveDemo } from './components/InteractiveDemo'
 import { ThreeScene } from './components/ThreeScene'
