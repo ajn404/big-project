@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import {
   Plus,
@@ -302,7 +303,7 @@ export default function ComponentManage() {
 
                 <div>
                   <label className="text-sm font-medium">模板代码</label>
-                  <textarea
+                  <Textarea
                     value={newComponent.template}
                     onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
                     placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
@@ -569,7 +570,7 @@ export default function ComponentManage() {
 
             <div>
               <label className="text-sm font-medium">模板代码</label>
-              <textarea
+              <Textarea
                 value={newComponent.template}
                 onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
                 placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
@@ -674,7 +675,7 @@ export default function ComponentManage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium mb-2 block">组件属性 (JSON格式)</label>
-                    <textarea
+                    <Textarea
                       value={JSON.stringify(previewProps, null, 2)}
                       onChange={(e) => {
                         try {

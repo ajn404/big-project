@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import {
   Bold,
@@ -454,7 +455,7 @@ return createElement(
         {/* 编辑器 */}
         {!isPreview && (
           <div className="flex-1 relative">
-            <textarea
+            <Textarea
               ref={textareaRef}
               value={value}
               onChange={handleInput}

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { X, Save } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
+import { Textarea } from '@/components/ui/textarea'
 
 interface Category {
   id: string
@@ -185,7 +186,7 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
 
                 <div>
                   <label className="block text-sm font-medium mb-2">描述 *</label>
-                  <textarea
+                  <Textarea
                     className="w-full p-3 border border-input rounded-md resize-none"
                     rows={3}
                     value={formData.description}

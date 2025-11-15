@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { X, Upload, FileText, Download } from 'lucide-react'
 
 interface Category {
@@ -294,7 +295,7 @@ export function MarkdownImportDialog({ categories, onClose, onImportComplete }: 
           {importMethod === 'text' && (
             <div>
               <label className="block text-sm font-medium mb-2">Markdown 内容</label>
-              <textarea
+              <Textarea
                 className="w-full p-3 border border-input rounded-md font-mono text-sm"
                 rows={10}
                 value={markdownContent}
@@ -363,7 +364,7 @@ prerequisites: ["前置要求1", "前置要求2"]
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium mb-2">描述 *</label>
-                  <textarea
+                  <Textarea
                     className="w-full p-3 border border-input rounded-md resize-none"
                     rows={3}
                     value={formData.description}

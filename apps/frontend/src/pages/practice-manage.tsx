@@ -71,8 +71,7 @@ export function PracticeManagePage() {
   )
 
   return (
-    <div>
-      {/* Header */}
+    <div className='flex flex-col gap-4 relative'>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">文章管理</h1>
@@ -119,7 +118,7 @@ export function PracticeManagePage() {
             <div className="text-2xl font-bold">{practiceNodes.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">MDX 文章</CardTitle>
@@ -131,7 +130,7 @@ export function PracticeManagePage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">组件文章</CardTitle>
@@ -143,7 +142,7 @@ export function PracticeManagePage() {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">分类数</CardTitle>
