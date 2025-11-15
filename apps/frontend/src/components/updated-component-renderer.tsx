@@ -12,8 +12,6 @@ interface ComponentRendererProps {
 // 直接使用 @workspace/ui-components
 import { initializeComponents, componentRegistry as uiRegistry } from '@workspace/ui-components'
 
-console.log(uiRegistry,'componentRegistry')
-
 // 获取组件注册表
 const getComponentRegistry = () => {
   return uiRegistry || ComponentManager

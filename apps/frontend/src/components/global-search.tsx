@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Dialog, DialogContent
+  Dialog, DialogContent, DialogDescription, DialogTitle
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -13,19 +13,20 @@ import { formatDate, getDifficultyColor, getDifficultyLabel } from '@/lib/utils'
 
 // 高亮文本工具函数
 function highlightText(text: string, query: string): JSX.Element[] {
-  if (!query.trim()) return [<span key={0}>{text}</span>]
-  
+  if (!query.trim()) return [<span key={`text-${text}`}>{text}</span>]
+
   const parts = text.split(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'))
-  return parts.map((part, index) => 
+  return parts.map((part, index) =>
     part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 text-foreground font-medium px-0.5 rounded">
+      <mark key={`highlight-${index}-${part}`} className="bg-yellow-200 dark:bg-yellow-800 text-foreground font-medium px-0.5 rounded">
         {part}
       </mark>
     ) : (
-      <span key={index}>{part}</span>
+      <span key={`span-${index}-${part}`}>{part}</span>
     )
   )
 }
+
 
 // 清理Markdown语法的函数
 function cleanMarkdownContent(content: string): string {
@@ -69,14 +70,13 @@ function getHighlightedContent(content: string, query: string, maxLength: number
   const suffix = end < cleanContent.length ? '...' : ''
   
   return [
-    <span key={0}>{prefix}</span>,
+    <span key="prefix">{prefix}</span>,
     ...highlightText(excerpt, query),
-    <span key={2}>{suffix}</span>
+    <span key="suffix">{suffix}</span>
   ]
 }
 import { useFilter } from '@/contexts/filter-context'
 import { useSearchPracticeNodes } from '@/hooks/useSearchPracticeNodes'
-import { DialogTitle } from '@radix-ui/react-dialog'
 
 interface GlobalSearchProps {
   isOpen: boolean
@@ -248,17 +248,19 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[60vw] h-[50vh] p-10 gap-0 overflow-auto">
+      <DialogContent aria-description='global search' className="w-full max-w-3xl max-h-[80vh] p-6 gap-0 overflow-hidden">
         <DialogTitle>全局搜索</DialogTitle>
+        <DialogDescription>搜索文章、标签或分类</DialogDescription>
+
         {/* 顶部输入区 */}
-        <div className="sticky top-0 px-4 pb-2">
+        <div className="sticky top-12 bg-background z-10 px-4 pb-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="搜索文章、标签、分类... (Ctrl+K)"
-              className="pl-10 pr-10 border-0 border-b border-border rounded-none focus-visible:ring-0 focus-visible:border-primary"
+              className="pl-10 pr-8 border-0 border-b border-border rounded-none focus-visible:ring-0 focus-visible:border-none w-full"
               autoFocus
             />
             {query && (
@@ -274,9 +276,12 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
           </div>
         </div>
 
-        {/* ✅ useMemo 缓存后的结果区 */}
-        <div className="max-h-[50vh] overflow-y-auto">{renderResults}</div>
+        {/* 结果区 */}
+        <div className="overflow-y-auto pt-4" style={{ maxHeight: 'calc(80vh - 9rem)' }}>
+          {renderResults}
+        </div>
       </DialogContent>
+
     </Dialog>
   )
 }

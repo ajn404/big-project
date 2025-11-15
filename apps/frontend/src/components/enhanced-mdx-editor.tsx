@@ -17,7 +17,9 @@ import {
   Heading3,
   Table,
   Minus,
-  Component
+  Component,
+  Maximize,
+  Minimize
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
 import ComponentManager from '@/utils/component-manager'
@@ -38,6 +40,9 @@ export function EnhancedMDXEditor({
   const [isPreview, setIsPreview] = useState(false)
   const [showComponentMenu, setShowComponentMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const editorRef = useRef<HTMLDivElement>(null)
+
 
   // 组件模板库 - 动态从组件管理器获取
   const [componentTemplates, setComponentTemplates] = useState<Array<{
@@ -47,10 +52,21 @@ export function EnhancedMDXEditor({
     template: string
   }>>([])
 
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      editorRef.current?.requestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      document.exitFullscreen()
+      setIsFullscreen(false)
+    }
+  }
+
+
   useEffect(() => {
     // 获取注册的React组件
     const registeredComponents = ComponentManager.generateMDXTemplates()
-    
+
     // 静态模板
     const staticTemplates = [
       // 基础UI组件
@@ -297,7 +313,11 @@ return createElement(
   }
 
   return (
-    <div className="border border-input rounded-lg overflow-hidden">
+    <div
+      ref={editorRef}
+      className={`border border-input rounded-lg overflow-hidden ${isFullscreen ? "fixed inset-0 z-50 bg-background" : ""
+        }`}
+    >
       {/* 工具栏 */}
       <div className="bg-muted p-2 border-b border-border">
         <div className="flex flex-wrap items-center gap-1">
@@ -329,6 +349,24 @@ return createElement(
           ))}
 
           <div className="w-px h-6 bg-border mx-1" />
+
+          <Button
+            variant={isFullscreen ? "default" : "ghost"}
+            size="sm"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              toggleFullscreen()
+            }}
+            className="h-8 w-8 p-0"
+            title="全屏"
+          >
+            {isFullscreen ? (
+              <Minimize className="h-4 w-4" />
+            ) : (
+              <Maximize className="h-4 w-4" />
+            )}
+          </Button>
 
           {/* 预览切换 */}
           <Button
