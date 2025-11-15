@@ -24,6 +24,49 @@ export class TagService {
     });
   }
 
+  async findByName(name: string): Promise<Tag> {
+    return this.tagRepository.findOne({
+      where: { name },
+    });
+  }
+
+  async findByNames(names: string[]): Promise<Tag[]> {
+    if (!names || names.length === 0) {
+      return [];
+    }
+    return this.tagRepository.find({
+      where: names.map(name => ({ name })),
+    });
+  }
+
+  async findOrCreateTags(tagNames: string[]): Promise<Tag[]> {
+    if (!tagNames || tagNames.length === 0) {
+      return [];
+    }
+
+    const tags: Tag[] = [];
+    
+    for (const tagName of tagNames) {
+      if (!tagName.trim()) continue;
+      
+      let tag = await this.findByName(tagName.trim());
+      
+      if (!tag) {
+        // Create new tag with random color
+        const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'];
+        tag = this.tagRepository.create({
+          name: tagName.trim(),
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+        tag = await this.tagRepository.save(tag);
+      }
+      
+      tags.push(tag);
+    }
+
+    return tags;
+  }
+
   // 清理没有关联文章的标签
   async cleanupUnusedTags(): Promise<void> {
     const allTags = await this.tagRepository.find({

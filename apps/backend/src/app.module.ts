@@ -10,6 +10,8 @@ import { DatabaseModule } from './database/database.module';
 import { PracticeNodeModule } from './practice-node/practice-node.module';
 import { CategoryModule } from './category/category.module';
 import { TagModule } from './tag/tag.module';
+import { UIComponentModule } from './ui-component/ui-component.module';
+import { SeedModule } from './database/seeds/seed.module';
 
 @Module({
   imports: [
@@ -39,6 +41,10 @@ import { TagModule } from './tag/tag.module';
     PracticeNodeModule,
     CategoryModule,
     TagModule,
+    UIComponentModule,
+    
+    // 种子数据模块
+    SeedModule,
   ],
 })
 export class AppModule {}

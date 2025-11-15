@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation } from '@apollo/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -18,54 +19,98 @@ import {
   Code,
   Tag
 } from 'lucide-react'
-import ComponentManager, { ComponentInfo, ComponentCategory } from '@/utils/component-manager'
-
-const categories = ['全部', ...ComponentManager.getCategories()]
+import { ComponentRenderer } from '@/components/updated-component-renderer'
+import { 
+  GET_UI_COMPONENTS, 
+  CREATE_UI_COMPONENT, 
+  UPDATE_UI_COMPONENT, 
+  DELETE_UI_COMPONENT,
+  GET_COMPONENT_CATEGORIES,
+  GET_COMPONENT_STATS
+} from '@/lib/graphql/ui-component-queries'
+import { 
+  UIComponent, 
+  ComponentCategory, 
+  ComponentStatus, 
+  CreateUIComponentInput,
+  ComponentStats
+} from '@/types/ui-component'
 
 export default function ComponentManage() {
-  const [components, setComponents] = useState<ComponentInfo[]>([])
-  const [, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('全部')
+  const [selectedCategory, setSelectedCategory] = useState<string>('全部')
+  const [selectedStatus] = useState<ComponentStatus | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [previewComponent, setPreviewComponent] = useState<ComponentInfo | null>(null)
-  const [editingComponent, setEditingComponent] = useState<ComponentInfo | null>(null)
+  const [previewComponent, setPreviewComponent] = useState<UIComponent | null>(null)
+  const [editingComponent, setEditingComponent] = useState<UIComponent | null>(null)
+  const [previewProps, setPreviewProps] = useState<Record<string, any>>({})
 
-
-  const [newComponent, setNewComponent] = useState<Partial<ComponentInfo>>({
-    name: '',
-    description: '',
-    category: 'UI组件',
-    template: '',
-    tags: []
+  // GraphQL查询和变更
+  const { data: componentsData, loading: componentsLoading, refetch: refetchComponents } = useQuery(GET_UI_COMPONENTS)
+  const { data: categoriesData } = useQuery(GET_COMPONENT_CATEGORIES)
+  const { data: statsData } = useQuery(GET_COMPONENT_STATS)
+  
+  const [createComponent] = useMutation(CREATE_UI_COMPONENT, {
+    onCompleted: () => {
+      refetchComponents()
+      setIsAddDialogOpen(false)
+      setNewComponent({
+        name: '',
+        description: '',
+        category: ComponentCategory.UI_COMPONENT,
+        template: '',
+        version: '1.0.0',
+        author: 'User',
+        status: ComponentStatus.ACTIVE,
+        props: [],
+        tagNames: []
+      })
+    }
+  })
+  
+  const [updateComponent] = useMutation(UPDATE_UI_COMPONENT, {
+    onCompleted: () => {
+      refetchComponents()
+      setEditingComponent(null)
+      setIsEditDialogOpen(false)
+    }
+  })
+  
+  const [deleteComponent] = useMutation(DELETE_UI_COMPONENT, {
+    onCompleted: () => {
+      refetchComponents()
+    }
   })
 
-  // 加载组件数据
-  const loadComponents = () => {
-    try {
-      const registeredComponents = ComponentManager.getAvailableComponents()
-      setComponents(registeredComponents)
-      setLoading(false)
-    } catch (error) {
-      console.error('Failed to load components:', error)
-      setComponents([])
-      setLoading(false)
-    }
-  }
+  const components = componentsData?.uiComponents || []
+  const categories = ['全部', ...(categoriesData?.componentCategories || [])]
+  const stats: ComponentStats | undefined = statsData?.componentStats
 
-  useEffect(() => {
-    loadComponents()
-  }, [])
+
+  const [newComponent, setNewComponent] = useState<Partial<CreateUIComponentInput>>({
+    name: '',
+    description: '',
+    category: ComponentCategory.UI_COMPONENT,
+    template: '',
+    version: '1.0.0',
+    author: 'User',
+    status: ComponentStatus.ACTIVE,
+    props: [],
+    tagNames: []
+  })
 
   // 过滤组件
-  const filteredComponents = components.filter(component => {
-    const matchesSearch = component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  const filteredComponents = components.filter((component: UIComponent) => {
+    const matchesSearch = !searchQuery || 
+      component.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       component.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      component.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      component.tags?.some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const matchesCategory = selectedCategory === '全部' || component.category === selectedCategory
-    return matchesSearch && matchesCategory
+    const matchesStatus = !selectedStatus || component.status === selectedStatus
+    
+    return matchesSearch && matchesCategory && matchesStatus
   })
 
   // 复制模板到剪贴板
@@ -75,107 +120,103 @@ export default function ComponentManage() {
   }
 
   // 添加组件
-  const handleAddComponent = () => {
+  const handleAddComponent = async () => {
     if (!newComponent.name || !newComponent.description || !newComponent.template) {
       alert('请填写所有必填字段')
       return
     }
 
-    const componentId = newComponent.name.replace(/\s+/g, '-').toLowerCase()
-    const componentData: Partial<ComponentInfo> = {
-      name: newComponent.name,
-      description: newComponent.description,
-      category: newComponent.category || 'UI组件',
-      template: newComponent.template,
-      tags: newComponent.tags || [],
-      version: '1.0.0',
-      author: 'User',
-      createdAt: new Date(),
-      updatedAt: new Date()
+    try {
+      await createComponent({
+        variables: {
+          input: {
+            name: newComponent.name,
+            description: newComponent.description,
+            category: newComponent.category || ComponentCategory.UI_COMPONENT,
+            template: newComponent.template,
+            version: newComponent.version || '1.0.0',
+            author: newComponent.author || 'User',
+            status: newComponent.status || ComponentStatus.ACTIVE,
+            props: newComponent.props || [],
+            propsSchema: newComponent.propsSchema,
+            documentation: newComponent.documentation,
+            examples: newComponent.examples,
+            tagNames: newComponent.tagNames || []
+          }
+        }
+      })
+    } catch (error) {
+      console.error('Failed to create component:', error)
+      alert('创建组件失败，请重试')
     }
-
-    // 使用 ComponentManager 注册组件
-    ComponentManager.registerComponent(componentId, null, componentData)
-
-    // 刷新组件列表
-    loadComponents()
-
-    // 重置表单
-    setNewComponent({
-      name: '',
-      description: '',
-      category: 'UI组件',
-      template: '',
-      tags: []
-    })
-    setIsAddDialogOpen(false)
   }
 
   // 编辑组件
-  const handleEditComponent = () => {
+  const handleEditComponent = async () => {
     if (!editingComponent || !newComponent.name || !newComponent.description || !newComponent.template) {
       alert('请填写所有必填字段')
       return
     }
 
-    const updates: Partial<ComponentInfo> = {
-      name: newComponent.name,
-      description: newComponent.description,
-      category: newComponent.category || 'UI组件',
-      template: newComponent.template,
-      tags: newComponent.tags || [],
-      updatedAt: new Date()
-    }
-
-    // 使用 ComponentManager 更新组件
-    const success = ComponentManager.updateComponent(editingComponent.id, updates)
-
-    if (success) {
-      // 刷新组件列表
-      loadComponents()
-
-      // 关闭编辑对话框
-      setIsEditDialogOpen(false)
-      setEditingComponent(null)
-
-      // 重置表单
-      setNewComponent({
-        name: '',
-        description: '',
-        category: 'UI组件',
-        template: '',
-        tags: []
+    try {
+      await updateComponent({
+        variables: {
+          input: {
+            id: editingComponent.id,
+            name: newComponent.name,
+            description: newComponent.description,
+            category: newComponent.category,
+            template: newComponent.template,
+            version: newComponent.version,
+            author: newComponent.author,
+            status: newComponent.status,
+            props: newComponent.props || [],
+            propsSchema: newComponent.propsSchema,
+            documentation: newComponent.documentation,
+            examples: newComponent.examples,
+            tagNames: newComponent.tagNames || []
+          }
+        }
       })
-    } else {
-      alert('编辑失败，请重试')
+    } catch (error) {
+      console.error('Failed to update component:', error)
+      alert('更新组件失败，请重试')
     }
   }
 
   // 删除组件
-  const handleDeleteComponent = (id: string) => {
+  const handleDeleteComponent = async (id: string) => {
     if (confirm('确定要删除这个组件吗？')) {
-      const success = ComponentManager.removeComponent(id)
-      if (success) {
-        loadComponents()
-      } else {
+      try {
+        await deleteComponent({
+          variables: { id }
+        })
+      } catch (error) {
+        console.error('Failed to delete component:', error)
         alert('删除失败，请重试')
       }
     }
   }
 
   // 开始编辑组件
-  const startEditComponent = (component: ComponentInfo) => {
+  const startEditComponent = (component: UIComponent) => {
     setEditingComponent(component)
     setNewComponent({
       name: component.name,
       description: component.description,
       category: component.category,
       template: component.template,
-      tags: component.tags || []
+      version: component.version,
+      author: component.author,
+      status: component.status,
+      props: component.props,
+      propsSchema: component.propsSchema,
+      documentation: component.documentation,
+      examples: component.examples,
+      tagNames: component.tags?.map(tag => tag.name) || []
     })
     setIsEditDialogOpen(true)
   }
-
 
   // 导出组件配置
   const handleExportComponents = () => {
@@ -201,7 +242,7 @@ export default function ComponentManage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={loadComponents}>
+          <Button variant="outline" onClick={() => refetchComponents()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             刷新
           </Button>
@@ -272,10 +313,10 @@ export default function ComponentManage() {
                 <div>
                   <label className="text-sm font-medium">标签 (逗号分隔)</label>
                   <Input
-                    value={newComponent.tags?.join(', ')}
+                    value={newComponent.tagNames?.join(', ') || ''}
                     onChange={(e) => setNewComponent({
                       ...newComponent,
-                      tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
+                      tagNames: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
                     })}
                     placeholder="UI, 按钮, 交互"
                   />
@@ -331,7 +372,7 @@ export default function ComponentManage() {
               <Component className="h-8 w-8 text-blue-500" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-muted-foreground">总组件数</p>
-                <p className="text-2xl font-bold">{components.length}</p>
+                <p className="text-2xl font-bold">{stats?.total || components.length}</p>
               </div>
             </div>
           </CardContent>
@@ -342,8 +383,8 @@ export default function ComponentManage() {
             <div className="flex items-center">
               <Tag className="h-8 w-8 text-green-500" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-muted-foreground">分类数量</p>
-                <p className="text-2xl font-bold">{categories.length - 1}</p>
+                <p className="text-sm font-medium text-muted-foreground">活跃组件</p>
+                <p className="text-2xl font-bold">{stats?.active || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -367,16 +408,24 @@ export default function ComponentManage() {
               <Code className="h-8 w-8 text-orange-500" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-muted-foreground">当前分类</p>
-                <p className="text-lg font-bold">{selectedCategory}</p>
+                <p className="text-lg font-bold">{selectedCategory || '全部'}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* 加载状态 */}
+      {componentsLoading && (
+        <div className="text-center py-8">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+          <p className="text-muted-foreground">正在加载组件...</p>
+        </div>
+      )}
+
       {/* 组件列表 */}
       <div className="grid grid-cols-2 gap-6">
-        {filteredComponents.map((component) => (
+        {filteredComponents.map((component: UIComponent) => (
           <Card key={component.id} className="group hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -395,9 +444,9 @@ export default function ComponentManage() {
                 {/* 标签 */}
                 {component.tags && component.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {component.tags.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {tag}
+                    {component.tags.map((tag: any) => (
+                      <Badge key={tag.id} variant="outline" className="text-xs" style={{ backgroundColor: tag.color + '20', borderColor: tag.color }}>
+                        {tag.name}
                       </Badge>
                     ))}
                   </div>
@@ -452,7 +501,7 @@ export default function ComponentManage() {
                 {/* 元信息 */}
                 <div className="text-xs text-muted-foreground pt-2 border-t">
                   <div>版本: {component.version} | 作者: {component.author}</div>
-                  <div>创建: {component.createdAt?.toLocaleDateString()}</div>
+                  <div>创建: {new Date(component.createdAt).toLocaleDateString()}</div>
                 </div>
               </div>
             </CardContent>
@@ -531,10 +580,10 @@ export default function ComponentManage() {
             <div>
               <label className="text-sm font-medium">标签 (逗号分隔)</label>
               <Input
-                value={Array.isArray(newComponent.tags) ? newComponent.tags.join(', ') : ''}
+                value={newComponent.tagNames?.join(', ') || ''}
                 onChange={(e) => setNewComponent({
                   ...newComponent,
-                  tags: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
+                  tagNames: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
                 })}
                 placeholder="UI, 按钮, 交互"
               />
@@ -548,9 +597,13 @@ export default function ComponentManage() {
               setNewComponent({
                 name: '',
                 description: '',
-                category: 'UI组件',
+                category: ComponentCategory.UI_COMPONENT,
                 template: '',
-                tags: []
+                version: '1.0.0',
+                author: 'User',
+                status: ComponentStatus.ACTIVE,
+                props: [],
+                tagNames: []
               })
             }}>
               取消
@@ -564,7 +617,10 @@ export default function ComponentManage() {
 
       {/* 组件详情预览对话框 */}
       {previewComponent && (
-        <Dialog open={!!previewComponent} onOpenChange={() => setPreviewComponent(null)}>
+        <Dialog open={!!previewComponent} onOpenChange={() => {
+          setPreviewComponent(null)
+          setPreviewProps({})
+        }}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -585,17 +641,96 @@ export default function ComponentManage() {
                     <div><strong>分类:</strong> {previewComponent.category}</div>
                     <div><strong>版本:</strong> {previewComponent.version}</div>
                     <div><strong>作者:</strong> {previewComponent.author}</div>
-                    <div><strong>创建时间:</strong> {previewComponent.createdAt?.toLocaleDateString()}</div>
+                    <div><strong>创建时间:</strong> {new Date(previewComponent.createdAt).toLocaleDateString()}</div>
                   </div>
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">标签</h4>
                   <div className="flex flex-wrap gap-1">
-                    {previewComponent.tags?.map((tag, index) => (
-                      <Badge key={index} variant="outline">{tag}</Badge>
+                    {previewComponent.tags?.map((tag: any) => (
+                      <Badge key={tag.id} variant="outline" style={{ backgroundColor: tag.color + '20', borderColor: tag.color }}>
+                        {tag.name}
+                      </Badge>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* 组件预览渲染 */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">组件预览</h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPreviewProps({})}
+                  >
+                    重置属性
+                  </Button>
+                </div>
+                
+                {/* Props 编辑器 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">组件属性 (JSON格式)</label>
+                    <textarea
+                      value={JSON.stringify(previewProps, null, 2)}
+                      onChange={(e) => {
+                        try {
+                          const parsed = JSON.parse(e.target.value || '{}')
+                          setPreviewProps(parsed)
+                        } catch {
+                          // 如果JSON无效，不更新状态
+                        }
+                      }}
+                      placeholder='{\n  "text": "Hello World",\n  "color": "primary"\n}'
+                      className="w-full h-24 p-3 text-sm font-mono rounded-md border border-input bg-background resize-none"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      输入有效的JSON格式来设置组件属性
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">常用属性快捷设置</label>
+                    <div className="space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreviewProps({ ...previewProps, text: 'Hello World' })}
+                      >
+                        添加 text 属性
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreviewProps({ ...previewProps, variant: 'primary' })}
+                      >
+                        添加 variant 属性
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPreviewProps({ ...previewProps, size: 'large' })}
+                      >
+                        添加 size 属性
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 实际预览区域 */}
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 bg-gray-50/50">
+                  <div className="mb-2">
+                    <span className="text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded border">
+                      实时预览
+                    </span>
+                  </div>
+                  <ComponentRenderer 
+                    componentName={previewComponent.name} 
+                    props={previewProps} 
+                  />
                 </div>
               </div>
 

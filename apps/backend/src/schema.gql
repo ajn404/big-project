@@ -14,6 +14,38 @@ type Category {
   updatedAt: DateTime!
 }
 
+"""组件分类"""
+enum ComponentCategory {
+  DATA_DISPLAY
+  FEEDBACK
+  FORM
+  INTERACTION
+  LAYOUT
+  NAVIGATION
+  THREE_D
+  UI_COMPONENT
+}
+
+type ComponentCategoryStats {
+  category: ComponentCategory!
+  count: Int!
+}
+
+type ComponentStats {
+  active: Int!
+  byCategory: [ComponentCategoryStats!]!
+  deprecated: Int!
+  inactive: Int!
+  total: Int!
+}
+
+"""组件状态"""
+enum ComponentStatus {
+  ACTIVE
+  DEPRECATED
+  INACTIVE
+}
+
 """内容类型"""
 enum ContentType {
   COMPONENT
@@ -33,6 +65,22 @@ input CreatePracticeNodeInput {
   title: String!
 }
 
+input CreateUIComponentInput {
+  author: String! = "System"
+  category: ComponentCategory! = UI_COMPONENT
+  description: String!
+  documentation: String
+  examples: String
+  name: String!
+  preview: String
+  props: [String!]! = []
+  propsSchema: String
+  status: ComponentStatus! = ACTIVE
+  tagNames: [String!]! = []
+  template: String!
+  version: String! = "1.0.0"
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -47,8 +95,11 @@ enum Difficulty {
 
 type Mutation {
   createPracticeNode(createPracticeNodeInput: CreatePracticeNodeInput!): PracticeNode!
+  createUIComponent(createUIComponentInput: CreateUIComponentInput!): UIComponent!
   removePracticeNode(id: ID!): Boolean!
+  removeUIComponent(id: ID!): Boolean!
   updatePracticeNode(updatePracticeNodeInput: UpdatePracticeNodeInput!): PracticeNode!
+  updateUIComponent(updateUIComponentInput: UpdateUIComponentInput!): UIComponent!
 }
 
 type PracticeNode {
@@ -71,13 +122,23 @@ type PracticeNode {
 type Query {
   categories: [Category!]!
   category(id: ID!): Category!
+  componentCategories: [ComponentCategory!]!
+  componentStats: ComponentStats!
+  componentStatuses: [ComponentStatus!]!
   practiceNode(id: ID!): PracticeNode!
   practiceNodes: [PracticeNode!]!
   practiceNodesByCategory(categoryName: String!): [PracticeNode!]!
   practiceNodesByTags(tagNames: [String!]!): [PracticeNode!]!
   searchPracticeNodes(categoryName: String, query: String, tagNames: [String!]): [PracticeNode!]!
+  searchUIComponents(category: ComponentCategory, query: String, status: ComponentStatus, tagNames: [String!]): [UIComponent!]!
   tag(id: ID!): Tag!
   tags: [Tag!]!
+  uiComponent(id: ID!): UIComponent!
+  uiComponentByName(name: String!): UIComponent!
+  uiComponents: [UIComponent!]!
+  uiComponentsByCategory(category: ComponentCategory!): [UIComponent!]!
+  uiComponentsByStatus(status: ComponentStatus!): [UIComponent!]!
+  uiComponentsByTags(tagNames: [String!]!): [UIComponent!]!
 }
 
 type Tag {
@@ -86,7 +147,27 @@ type Tag {
   id: ID!
   name: String!
   practiceNodes: [PracticeNode!]!
+  uiComponents: [UIComponent!]!
   updatedAt: DateTime!
+}
+
+type UIComponent {
+  author: String!
+  category: ComponentCategory!
+  createdAt: DateTime!
+  description: String!
+  documentation: String
+  examples: String
+  id: ID!
+  name: String!
+  preview: String
+  props: [String!]!
+  propsSchema: String
+  status: ComponentStatus!
+  tags: [Tag!]!
+  template: String!
+  updatedAt: DateTime!
+  version: String!
 }
 
 input UpdatePracticeNodeInput {
@@ -101,4 +182,21 @@ input UpdatePracticeNodeInput {
   prerequisites: [String!] = []
   tagNames: [String!]
   title: String
+}
+
+input UpdateUIComponentInput {
+  author: String = "System"
+  category: ComponentCategory = UI_COMPONENT
+  description: String
+  documentation: String
+  examples: String
+  id: ID!
+  name: String
+  preview: String
+  props: [String!] = []
+  propsSchema: String
+  status: ComponentStatus = ACTIVE
+  tagNames: [String!] = []
+  template: String
+  version: String = "1.0.0"
 }

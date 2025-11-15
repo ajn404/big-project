@@ -6,6 +6,7 @@ import { DataSource } from 'typeorm';
 import { PracticeNode } from './entities/practice-node.entity';
 import { Category } from './entities/category.entity';
 import { Tag } from './entities/tag.entity';
+import { UIComponent } from './entities/ui-component.entity';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { Tag } from './entities/tag.entity';
         username: configService.get('DATABASE_USERNAME', 'postgres'),
         password: configService.get('DATABASE_PASSWORD', 'password'),
         database: configService.get('DATABASE_NAME', 'learning_practice'),
-        entities: [PracticeNode, Category, Tag],
+        entities: [PracticeNode, Category, Tag, UIComponent],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
         migrations: [__dirname + '/migrations/*{.ts,.js}'],

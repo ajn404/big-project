@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn, U
 import { ObjectType, Field, ID } from '@nestjs/graphql';
 import { PracticeNode } from './practice-node.entity';
 
+
 @ObjectType()
 @Entity('tags')
 export class Tag {
@@ -21,6 +22,10 @@ export class Tag {
   @ManyToMany(() => PracticeNode, practiceNode => practiceNode.tags)
   practiceNodes: PracticeNode[];
 
+  @Field(() => [UIComponent])
+  @ManyToMany(() => UIComponent, uiComponent => uiComponent.tags)
+  uiComponents: UIComponent[];
+
   @Field()
   @CreateDateColumn()
   createdAt: Date;
@@ -29,3 +34,4 @@ export class Tag {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+import { UIComponent } from './ui-component.entity';
