@@ -1,6 +1,6 @@
-import { ExampleCard } from './components/ExampleCard'
-import { InteractiveDemo } from './components/InteractiveDemo'
-import { ThreeScene } from './components/ThreeScene'
+import { ExampleCard } from './components/ui/ExampleCard'
+import { InteractiveDemo } from './components/interactive/InteractiveDemo'
+import { ThreeScene } from './components/three/ThreeScene'
 import { ComponentInfo } from './types'
 import { registerComponent } from '.'
 
