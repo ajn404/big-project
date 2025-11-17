@@ -155,7 +155,7 @@ export function EnhancedMDXEditor({
         name: 'Code Sandbox',
         description: '代码沙箱',
         category: '代码块',
-        template: `:::sandbox\n
+        template: `:::sandbox
 const {createElement} = React;
 return createElement(
     'h1',
