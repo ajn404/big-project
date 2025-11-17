@@ -18,9 +18,20 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const { data: categoriesData } = useQuery(GET_CATEGORIES)
   const { data: tagsData } = useQuery(GET_TAGS)
 
+  // 处理导航点击 - 只在移动端关闭侧边栏
+  const handleNavigationClick = () => {
+    // 检查是否是移动端（屏幕宽度小于1024px，对应 lg 断点）
+    if (window.innerWidth < 1024) {
+      onClose()
+    }
+  }
+
   // 处理分类和标签点击
   const handleFilterClick = (type: 'category' | 'tag', value: string) => {
-    onClose()
+    // 只在移动端关闭侧边栏
+    if (window.innerWidth < 1024) {
+      onClose()
+    }
     
     if (location.pathname === '/practice' && onFilterSelect) {
       // 如果当前在 practice 页面，使用回调函数
@@ -67,7 +78,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex h-16 items-center justify-between  px-6">
-            <Link to="/" className="flex items-center space-x-2 " onClick={onClose}>
+            <Link to="/" className="flex items-center space-x-2 " onClick={handleNavigationClick}>
               <div className="h-8 w-8 rounded-lg bg-primary"></div>
               <span className="font-bold">学习实践</span>
             </Link>
@@ -96,7 +107,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                       <li key={item.name}>
                         <Link
                           to={item.href}
-                          onClick={onClose}
+                          onClick={handleNavigationClick}
                           className={cn(
                             'flex items-center space-x-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                             location.pathname === item.href

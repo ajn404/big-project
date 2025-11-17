@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { GlobalSearch } from '@/components/global-search'
 import { Menu, Search, Github, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 interface HeaderProps {
   onMenuClick: () => void
@@ -13,6 +14,16 @@ interface HeaderProps {
 
 export function Header({ onMenuClick, sidebarOpen, onSidebarToggle }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const location = useLocation()
+
+  // 导航菜单配置
+  const navigation = [
+    { name: '首页', href: '/' },
+    { name: '实践', href: '/practice' },
+    { name: '文章管理', href: '/admin/practice' },
+    { name: '关于', href: '/about' },
+    { name: '功能测试', href: '/test' },
+  ]
 
   // 全局快捷键监听器
   useEffect(() => {
@@ -42,36 +53,20 @@ export function Header({ onMenuClick, sidebarOpen, onSidebarToggle }: HeaderProp
 
         {/* Main navigation */}
         <nav className="mx-4 hidden lg:flex items-center space-x-6 text-sm font-medium">
-          <Link
-            to="/"
-            className="transition-colors hover:text-foreground/80 text-foreground"
-          >
-            首页
-          </Link>
-          <Link
-            to="/practice"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-          >
-            实践
-          </Link>
-          <Link
-            to="/admin/practice"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-          >
-            文章管理
-          </Link>
-          <Link
-            to="/about"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-          >
-            关于
-          </Link>
-          <Link
-            to="/test"
-            className="transition-colors hover:text-foreground/80 text-foreground/60"
-          >
-            功能测试
-          </Link>
+          {navigation.map((item) => (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={cn(
+                'transition-colors hover:text-foreground/80',
+                location.pathname === item.href
+                  ? 'text-foreground'
+                  : 'text-foreground/60'
+              )}
+            >
+              {item.name}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
