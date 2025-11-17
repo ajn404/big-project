@@ -43,6 +43,7 @@ export function EnhancedMDXEditor({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
 
 
   // 组件模板库 - 动态从组件管理器获取
@@ -54,7 +55,13 @@ export function EnhancedMDXEditor({
   }>>([])
 
   const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen)
+    const newFullscreenState = !isFullscreen
+    setIsFullscreen(newFullscreenState)
+    
+    // 进入全屏时，确保退出预览模式（因为全屏已经是双栏显示）
+    if (newFullscreenState && isPreview) {
+      setIsPreview(false)
+    }
   }
 
   // 处理全屏模式的键盘事件
@@ -329,6 +336,25 @@ return createElement(
     onChange(e.target.value)
   }
 
+  // 同步滚动处理
+  const handleEditorScroll = () => {
+    if (!isFullscreen || !textareaRef.current || !previewRef.current) return
+    
+    const textarea = textareaRef.current
+    const preview = previewRef.current
+    
+    // 计算编辑器的滚动百分比
+    const scrollTop = textarea.scrollTop
+    const scrollHeight = textarea.scrollHeight - textarea.clientHeight
+    const scrollPercentage = scrollHeight > 0 ? scrollTop / scrollHeight : 0
+    
+    // 同步到预览区域
+    const previewScrollHeight = preview.scrollHeight - preview.clientHeight
+    if (previewScrollHeight > 0) {
+      preview.scrollTop = previewScrollHeight * scrollPercentage
+    }
+  }
+
   // 实时预览模式切换
   const togglePreview = () => {
     setIsPreview(!isPreview)
@@ -393,20 +419,29 @@ return createElement(
             )}
           </Button>
 
-          {/* 预览切换 */}
-          <Button
-            variant={isPreview ? "default" : "ghost"}
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              togglePreview()
-            }}
-            className="h-8"
-          >
-            {isPreview ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
-            {isPreview ? '编辑' : '预览'}
-          </Button>
+          {/* 预览切换 - 仅在非全屏模式显示 */}
+          {!isFullscreen && (
+            <Button
+              variant={isPreview ? "default" : "ghost"}
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                togglePreview()
+              }}
+              className="h-8"
+            >
+              {isPreview ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+              {isPreview ? '编辑' : '预览'}
+            </Button>
+          )}
+
+          {/* 全屏模式提示 */}
+          {isFullscreen && (
+            <div className="text-xs text-muted-foreground px-2">
+              双栏编辑模式
+            </div>
+          )}
         </div>
       </div>
 
@@ -481,40 +516,100 @@ return createElement(
           height: isFullscreen ? "calc(100vh - 120px)" : height 
         }}
       >
-        {/* 编辑器 */}
-        {!isPreview && (
-          <div className="flex-1 relative">
-            <Textarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleInput}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
-              style={{ minHeight: height }}
-            />
-
-            {/* 行号 (可选) */}
-            {/* <div className="absolute left-0 top-0 p-4 text-xs text-muted-foreground bg-muted/50 pointer-events-none">
-              {value.split('\n').map((_, index) => (
-                <div key={index} className="h-5 leading-5">
-                  {index + 1}
+        {/* 全屏模式：左右分栏 */}
+        {isFullscreen ? (
+          <>
+            {/* 左侧：编辑器 */}
+            <div className="w-1/2 flex flex-col">
+              {/* 编辑器标题栏 */}
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Code className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Markdown 编辑器</span>
                 </div>
-              ))}
-            </div> */}
-          </div>
-        )}
+                <div className="text-xs text-muted-foreground">
+                  {value.length} 字符
+                </div>
+              </div>
+              
+              {/* 编辑器区域 */}
+              <div className="flex-1 relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={value}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onScroll={handleEditorScroll}
+                  placeholder={placeholder}
+                  className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
+                  style={{ minHeight: height }}
+                />
+              </div>
+            </div>
 
-        {/* 预览 */}
-        {isPreview && (
-          <div className="flex-1 p-4 overflow-auto bg-background">
-            <MDXRenderer content={value} />
-          </div>
-        )}
+            {/* 分隔线 */}
+            <div className="w-px bg-border" />
 
-        {/* 分屏模式 */}
-        {!isPreview && value && (
-          <div className="w-px bg-border" />
+            {/* 右侧：实时预览 */}
+            <div className="w-1/2 flex flex-col bg-background">
+              {/* 预览标题栏 */}
+              <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">实时预览</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {value.length > 0 ? `${value.split('\n').length} 行` : '空白文档'}
+                </div>
+              </div>
+              
+              {/* 预览内容 */}
+              <div ref={previewRef} className="flex-1 p-4 overflow-auto">
+                <div className="max-w-none prose prose-sm dark:prose-invert">
+                  {value.trim() ? (
+                    <MDXRenderer content={value} />
+                  ) : (
+                    <div className="flex items-center justify-center h-32 text-muted-foreground">
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">📝</div>
+                        <div className="text-sm">开始输入内容查看预览</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* 非全屏模式：原有逻辑 */}
+            {/* 编辑器 */}
+            {!isPreview && (
+              <div className="flex-1 relative">
+                <Textarea
+                  ref={textareaRef}
+                  value={value}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  placeholder={placeholder}
+                  className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
+                  style={{ minHeight: height }}
+                />
+              </div>
+            )}
+
+            {/* 预览 */}
+            {isPreview && (
+              <div className="flex-1 p-4 overflow-auto bg-background">
+                <MDXRenderer content={value} />
+              </div>
+            )}
+
+            {/* 分屏模式 */}
+            {!isPreview && value && (
+              <div className="w-px bg-border" />
+            )}
+          </>
         )}
       </div>
 
@@ -524,6 +619,14 @@ return createElement(
           <span>字符数: {value.length}</span>
           <span>行数: {value.split('\n').length}</span>
           <span>预估阅读时间: {Math.ceil(value.length / 500)} 分钟</span>
+          {isFullscreen && (
+            <>
+              <span className="text-primary">•</span>
+              <span>双栏编辑 & 实时预览</span>
+              <span>•</span>
+              <span>同步滚动</span>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
