@@ -118,7 +118,9 @@ const remarkCustomComponents = () => {
   return (tree: any) => {
     const blocks: any[] = []
 
-    visit(tree, 'text', (node) => {
+    visit(tree, 'text', (node, _, parent) => {
+      if (parent.type === 'code' || parent.type === 'inlineCode') return
+      if (parent.type === 'html') return
       const value = node.value
       if (!value) return
 
@@ -129,7 +131,7 @@ const remarkCustomComponents = () => {
       while ((match = regex.exec(value)) !== null) {
         const [, type, attrRaw, content] = match
         const attributes = attrRaw?.trim() || ''
-
+        
         blocks.push({
           type,
           attributes,
@@ -141,6 +143,8 @@ const remarkCustomComponents = () => {
 
     // 遍历树替换节点
     visit(tree, 'text', (node, index, parent) => {
+      if (parent.type === 'code' || parent.type === 'inlineCode') return
+      if (parent.type === 'html') return
       const value = node.value
       if (!value) return
 
@@ -190,6 +194,8 @@ const remarkCustomComponents = () => {
 const remarkHighlight = () => {
   return (tree: any) => {
     visit(tree, 'text', (node, index, parent) => {
+      if (parent.type === 'code' || parent.type === 'inlineCode') return
+      if (parent.type === 'html') return
       const text = node.value
       if (text && text.includes('==')) {
         const parts = text.split(/(==.*?==)/g)
@@ -225,11 +231,12 @@ const remarkHighlight = () => {
 // 自定义组件映射
 const customComponents = {
   // 代码块组件 - 添加复制功能
-  code({ node, inline, className, children, ...props }: any) {
+  code({ node, _, className, children, ...props }: any) {
     const match = /language-(\w+)/.exec(className || '')
     const language = match ? match[1] : ''
+    const isInline = node.position?.start.line === node.position?.end.line
 
-    if (inline) {
+    if (isInline) {
       return (
         <code 
           className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono border border-border" 

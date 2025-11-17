@@ -68,7 +68,7 @@ export const PracticeGrid = React.memo(function PracticeGrid({ items }: Practice
               </Badge>
             </div>
             
-            <CardTitle className="line-clamp-2 hover:text-primary transition-colors">
+            <CardTitle className="line-clamp-2 hover:text-primary transition-colors leading-8 dark:text-teal-100">
               <Link to={`/practice/${item.id}`}>
                 {item.title}
               </Link>
