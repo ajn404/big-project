@@ -58,7 +58,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 transform border-r bg-background transition-transform duration-200 ease-in-out lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-72 transform border-r bg-background transition-transform duration-200 ease-in-out',
+          // Mobile: show/hide based on open state
+          // Desktop: show/hide based on open state (no longer always visible)
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >

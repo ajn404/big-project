@@ -2,14 +2,16 @@ import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { GlobalSearch } from '@/components/global-search'
-import { Menu, Search } from 'lucide-react'
+import { Menu, Search, Github, PanelLeftOpen, PanelLeftClose } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 interface HeaderProps {
   onMenuClick: () => void
+  sidebarOpen: boolean
+  onSidebarToggle: () => void
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick, sidebarOpen, onSidebarToggle }: HeaderProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   // 全局快捷键监听器
@@ -26,7 +28,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   }, [])
 
   return (
-    <header className="sticky top-0 left-72 z-50 w-[calc(100vw-18rem)] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className={`sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-200 ${sidebarOpen ? 'lg:left-72 lg:w-[calc(100vw-18rem)]' : 'left-0 w-full'}`}>
       <div className="container flex h-16 items-center">
         {/* Mobile menu button */}
         <Button
@@ -96,6 +98,37 @@ export function Header({ onMenuClick }: HeaderProps) {
             className="md:hidden"
           >
             <Search className="h-4 w-4" />
+          </Button>
+
+          {/* Sidebar toggle (desktop only) */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onSidebarToggle}
+            className="hidden lg:flex"
+            title={sidebarOpen ? "收起侧边栏" : "展开侧边栏"}
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-[1.2rem] w-[1.2rem]" />
+            ) : (
+              <PanelLeftOpen className="h-[1.2rem] w-[1.2rem]" />
+            )}
+          </Button>
+
+          {/* GitHub link */}
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            title="访问 GitHub 仓库"
+          >
+            <a
+              href="https://github.com/ajn404/big-project"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github className="h-[1.2rem] w-[1.2rem]" />
+            </a>
           </Button>
 
           {/* Theme toggle */}
