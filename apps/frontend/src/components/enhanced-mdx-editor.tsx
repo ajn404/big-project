@@ -54,14 +54,35 @@ export function EnhancedMDXEditor({
   }>>([])
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      editorRef.current?.requestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
-    }
+    setIsFullscreen(!isFullscreen)
   }
+
+  // 处理全屏模式的键盘事件
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false)
+      }
+      // F11 键切换全屏
+      if (e.key === 'F11') {
+        e.preventDefault()
+        setIsFullscreen(!isFullscreen)
+      }
+    }
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyDown)
+      // 防止页面滚动
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [isFullscreen])
 
 
   useEffect(() => {
@@ -316,8 +337,11 @@ return createElement(
   return (
     <div
       ref={editorRef}
-      className={`border border-input rounded-lg overflow-hidden ${isFullscreen ? "fixed inset-0 z-50 bg-background" : ""
-        }`}
+      className={`border border-input rounded-lg overflow-hidden transition-all duration-200 ${
+        isFullscreen 
+          ? "fixed inset-0 z-50 bg-background rounded-none border-0" 
+          : ""
+      }`}
     >
       {/* 工具栏 */}
       <div className="bg-muted p-2 border-b border-border">
@@ -360,7 +384,7 @@ return createElement(
               toggleFullscreen()
             }}
             className="h-8 w-8 p-0"
-            title="全屏"
+            title={isFullscreen ? "退出全屏 (ESC)" : "全屏 (F11)"}
           >
             {isFullscreen ? (
               <Minimize className="h-4 w-4" />
@@ -451,7 +475,12 @@ return createElement(
       )}
 
       {/* 编辑器区域 */}
-      <div className="flex" style={{ height }}>
+      <div 
+        className="flex" 
+        style={{ 
+          height: isFullscreen ? "calc(100vh - 120px)" : height 
+        }}
+      >
         {/* 编辑器 */}
         {!isPreview && (
           <div className="flex-1 relative">
@@ -503,6 +532,10 @@ return createElement(
             <Badge variant="outline" className="text-xs">Ctrl+B 粗体</Badge>
             <Badge variant="outline" className="text-xs">Ctrl+I 斜体</Badge>
             <Badge variant="outline" className="text-xs">Ctrl+K 链接</Badge>
+            <Badge variant="outline" className="text-xs">F11 全屏</Badge>
+            {isFullscreen && (
+              <Badge variant="outline" className="text-xs">ESC 退出全屏</Badge>
+            )}
           </div>
         </div>
       </div>
