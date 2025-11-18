@@ -20,9 +20,10 @@ export function Header({ onMenuClick, sidebarOpen, onSidebarToggle }: HeaderProp
   const navigation = [
     { name: '首页', href: '/' },
     { name: '实践', href: '/practice' },
-    { name: '文章管理', href: '/admin/practice' },
+    { name: '组件管理', href: '/component-manage' },
+    { name: '资源管理', href: '/asset-manage' },
+    { name: '添加内容', href: '/practice-manage' },
     { name: '关于', href: '/about' },
-    { name: '功能测试', href: '/test' },
   ]
 
   // 全局快捷键监听器

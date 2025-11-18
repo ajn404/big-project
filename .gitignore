@@ -57,3 +57,5 @@ Thumbs.db
 *.tgz
 *.tar.gz
 .cache/
+
+apps/backend/uploads

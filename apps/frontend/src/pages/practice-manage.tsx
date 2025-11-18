@@ -74,7 +74,7 @@ export function PracticeManagePage() {
     <div className='flex flex-col gap-4 relative'>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">文章管理</h1>
+          <h1 className="text-3xl font-bold">添加内容</h1>
           <p className="text-muted-foreground mt-1">
             管理实践文章的新增、编辑和删除
           </p>

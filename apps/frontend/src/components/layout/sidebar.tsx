@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { X, Home, BookOpen, Info, Folder, Tag, Settings, Component } from 'lucide-react'
+import { X, Home, BookOpen, Info, Folder, Tag, Settings, Component, FolderOpen, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@apollo/client'
 import { GET_CATEGORIES, GET_TAGS } from '@/lib/graphql/queries'
@@ -50,9 +50,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   const navigation = [
     { name: '首页', href: '/', icon: Home },
-    { name: '实践', href: '/practice', icon: BookOpen },
+    { name: '实践练习', href: '/practice', icon: BookOpen },
     { name: '组件管理', href: '/component-manage', icon: Component },
-    { name: '文章管理', href: '/admin/practice', icon: Settings },
+    { name: '资源管理', href: '/asset-manage', icon: FolderOpen },
+    { name: '添加内容', href: '/practice-manage', icon: Plus },
     { name: '关于', href: '/about', icon: Info },
   ]
 

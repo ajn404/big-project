@@ -7,6 +7,7 @@ import { PracticeManagePage } from '@/pages/practice-manage'
 import { AboutPage } from '@/pages/about'
 import { QuickTest } from '@/components/quick-test'
 import ComponentManage from '@/pages/component-manage'
+import AssetManagePage from '@/pages/asset-manage'
 
 function App() {
   return (
@@ -15,8 +16,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/practice" element={<PracticePage />} />
         <Route path="/practice/:id" element={<PracticeDetailPage />} />
-        <Route path="/admin/practice" element={<PracticeManagePage />} />
+        <Route path="/practice-manage" element={<PracticeManagePage />} />
         <Route path="/component-manage" element={<ComponentManage />} />
+        <Route path="/asset-manage" element={<AssetManagePage />} />
         <Route path="/test" element={<QuickTest />} />
         <Route path="/about" element={<AboutPage />} />
       </Routes>

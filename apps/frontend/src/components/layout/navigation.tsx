@@ -4,7 +4,8 @@ import {
   Component,
   FileText,
   Home,
-  Plus
+  Plus,
+  FolderOpen
 } from 'lucide-react'
 
 const navigationItems = [
@@ -22,6 +23,11 @@ const navigationItems = [
     name: '组件管理',
     path: '/component-manage',
     icon: Component
+  },
+  {
+    name: '资源管理',
+    path: '/asset-manage',
+    icon: FolderOpen
   },
   {
     name: '添加内容',

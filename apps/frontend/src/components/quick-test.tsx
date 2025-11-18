@@ -23,7 +23,7 @@ export function QuickTest() {
   const features = [
     {
       icon: FileText,
-      title: '文章管理',
+      title: '内容管理',
       description: '完整的CRUD功能，支持创建、编辑、删除文章',
       status: '已完成'
     },
@@ -89,7 +89,7 @@ console.log(message)
 
 | 特性 | 状态 | 描述 |
 |------|------|------|
-| 文章管理 | ✅ | 完整的CRUD功能 |
+| 内容管理 | ✅ | 完整的CRUD功能 |
 | Markdown导入 | ✅ | 多种导入方式 |
 | 增强编辑器 | ✅ | 工具栏和预览 |
 | 优化渲染 | ✅ | 美观的样式 |
@@ -109,7 +109,7 @@ console.log(message)
       <div>
         <h1 className="text-3xl font-bold">功能测试</h1>
         <p className="text-muted-foreground mt-1">
-          测试新增的文章管理功能和优化的 MDX 渲染器
+          测试新增的内容管理功能和优化的 MDX 渲染器
         </p>
       </div>
 
@@ -174,9 +174,9 @@ console.log(message)
                     className="h-auto p-4 flex flex-col items-center space-y-2"
                     variant="outline"
                   >
-                    <a href="/admin/practice">
+                    <a href="/practice-manage">
                       <FileText className="h-6 w-6" />
-                      <span>文章管理</span>
+                      <span>添加内容</span>
                     </a>
                   </Button>
                 </div>

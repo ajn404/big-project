@@ -2,6 +2,44 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Asset {
+  alt: String
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  metadata: JSONObject
+  mimeType: String!
+  name: String!
+  originalName: String!
+  size: Float!
+  type: AssetType!
+  updatedAt: DateTime!
+  url: String!
+}
+
+type AssetStatsType {
+  byType: AssetTypeStats!
+  total: Int!
+  totalSize: Float!
+}
+
+"""资源类型"""
+enum AssetType {
+  AUDIO
+  DOCUMENT
+  IMAGE
+  OTHER
+  VIDEO
+}
+
+type AssetTypeStats {
+  audio: Int!
+  document: Int!
+  image: Int!
+  other: Int!
+  video: Int!
+}
+
 type Category {
   color: String!
   createdAt: DateTime!
@@ -93,11 +131,18 @@ enum Difficulty {
   INTERMEDIATE
 }
 
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
+
 type Mutation {
   createPracticeNode(createPracticeNodeInput: CreatePracticeNodeInput!): PracticeNode!
   createUIComponent(createUIComponentInput: CreateUIComponentInput!): UIComponent!
+  removeAsset(id: ID!): Boolean!
   removePracticeNode(id: ID!): Boolean!
   removeUIComponent(id: ID!): Boolean!
+  updateAsset(input: UpdateAssetInput!): Asset!
   updatePracticeNode(updatePracticeNodeInput: UpdatePracticeNodeInput!): PracticeNode!
   updateUIComponent(updateUIComponentInput: UpdateUIComponentInput!): UIComponent!
 }
@@ -120,6 +165,9 @@ type PracticeNode {
 }
 
 type Query {
+  asset(id: ID!): Asset!
+  assetStats: AssetStatsType!
+  assets(limit: Int! = 20, offset: Int! = 0, search: String, type: AssetType): [Asset!]!
   categories: [Category!]!
   category(id: ID!): Category!
   componentCategories: [ComponentCategory!]!
@@ -168,6 +216,13 @@ type UIComponent {
   template: String!
   updatedAt: DateTime!
   version: String!
+}
+
+input UpdateAssetInput {
+  alt: String
+  description: String
+  id: ID!
+  name: String
 }
 
 input UpdatePracticeNodeInput {

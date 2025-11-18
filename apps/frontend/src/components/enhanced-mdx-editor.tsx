@@ -23,6 +23,8 @@ import {
   Minimize
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
+import { AssetSelectorDialog } from './asset-selector-dialog'
+import { AssetType, Asset } from '@/types/asset'
 import ComponentManager from '@/utils/component-manager'
 
 interface EnhancedMDXEditorProps {
@@ -40,6 +42,7 @@ export function EnhancedMDXEditor({
 }: EnhancedMDXEditorProps) {
   const [isPreview, setIsPreview] = useState(false)
   const [showComponentMenu, setShowComponentMenu] = useState(false)
+  const [showAssetSelector, setShowAssetSelector] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
@@ -275,7 +278,7 @@ return createElement(
         {
           icon: Image,
           label: '图片',
-          action: () => insertText('![', '](image-url)', '图片描述')
+          action: () => setShowAssetSelector(true)
         },
         {
           icon: Table,
@@ -358,6 +361,11 @@ return createElement(
   // 实时预览模式切换
   const togglePreview = () => {
     setIsPreview(!isPreview)
+  }
+
+  const handleAssetSelect = (asset: Asset) => {
+    const markdownText = `![${asset.alt || asset.description || asset.name}](${asset.url})`
+    insertAtNewLine(markdownText)
   }
 
   return (
@@ -642,6 +650,15 @@ return createElement(
           </div>
         </div>
       </div>
+
+      {/* 资源选择器对话框 */}
+      <AssetSelectorDialog
+        open={showAssetSelector}
+        onOpenChange={setShowAssetSelector}
+        onSelect={handleAssetSelect}
+        allowedTypes={[AssetType.IMAGE]}
+        title="选择图片"
+      />
     </div>
   )
 }

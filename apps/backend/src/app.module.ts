@@ -11,6 +11,7 @@ import { PracticeNodeModule } from './practice-node/practice-node.module';
 import { CategoryModule } from './category/category.module';
 import { TagModule } from './tag/tag.module';
 import { UIComponentModule } from './ui-component/ui-component.module';
+import { AssetModule } from './asset/asset.module';
 import { SeedModule } from './database/seeds/seed.module';
 
 @Module({
@@ -42,6 +43,7 @@ import { SeedModule } from './database/seeds/seed.module';
     CategoryModule,
     TagModule,
     UIComponentModule,
+    AssetModule,
     
     // 种子数据模块
     SeedModule,
