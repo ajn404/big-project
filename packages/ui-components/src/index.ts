@@ -69,3 +69,24 @@ export const getComponentsByCategory = (category: ComponentCategory): ComponentI
 }
 
 export { initializeComponents }
+
+// 导出自动注册相关功能
+export { 
+  createAutoRegisterComponent, 
+  processAutoRegisterQueue,
+  getQueuedComponentsCount,
+  clearAutoRegisterQueue,
+  CATEGORIES
+} from './auto-register'
+
+// 导出组件发现工具
+export {
+  getComponentsByCategory as getComponentsByCategoryUtil,
+  searchComponentsByName,
+  getAvailableCategories,
+  getComponentStats,
+  validateComponentRegistration
+} from './utils/component-discovery'
+
+// 导出所有组件
+export * from './components'

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
+import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 
 interface InteractiveDemoProps {
   title?: string
@@ -8,13 +9,13 @@ interface InteractiveDemoProps {
   className?: string
 }
 
-export const InteractiveDemo: React.FC<InteractiveDemoProps> = ({
+function InteractiveDemo({
   title = "交互式演示",
   description = "这是一个交互式组件演示区域。",
   animationSpeed = 0.1,
   gridSize = 6,
   className = ""
-}) => {
+}: InteractiveDemoProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   return (
@@ -47,3 +48,17 @@ export const InteractiveDemo: React.FC<InteractiveDemoProps> = ({
     </div>
   )
 }
+
+// Auto-register the component
+const RegisteredInteractiveDemo = createAutoRegisterComponent({
+  id: 'interactive-demo',
+  name: 'InteractiveDemo',
+  description: '交互式演示组件，展示悬停效果和动画',
+  category: CATEGORIES.INTERACTIVE,
+  template: `:::react{component="InteractiveDemo" title="自定义标题" gridSize="9"}
+:::`,
+  tags: ['交互', '演示', '动画'],
+  version: '1.0.0',
+})(InteractiveDemo)
+
+export { RegisteredInteractiveDemo as InteractiveDemo }

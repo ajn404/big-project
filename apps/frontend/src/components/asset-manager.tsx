@@ -130,7 +130,6 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
             <SelectValue placeholder="所有类型" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">所有类型</SelectItem>
             {typeOptions.map((type) => (
               <SelectItem key={type} value={type}>
                 {type.charAt(0).toUpperCase() + type.slice(1)}
