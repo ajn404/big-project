@@ -22,9 +22,7 @@ const RegisteredExampleCard = createAutoRegisterComponent({
   name: 'ThreeScene',
   description: 'threejs demo',
   category: CATEGORIES.THREE_D,
-  template: `:::react{component="ThreeScene"}
-卡片内容
-:::`,
+  template: `:::react{component="ThreeScene"}卡片内容:::`,
   tags: ['卡片', 'UI', '示例'],
   version: '1.0.0',
 })(ThreeScene)

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@apollo/client'
 import { Button, Input, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Textarea, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components'
+import { getAllRegisteredComponents } from '@workspace/ui-components'
 import {
   Plus,
   Search,
@@ -41,6 +42,8 @@ export default function ComponentManage() {
   const [previewComponent, setPreviewComponent] = useState<UIComponent | null>(null)
   const [editingComponent, setEditingComponent] = useState<UIComponent | null>(null)
   const [previewProps, setPreviewProps] = useState<Record<string, any>>({})
+  const [registeredComponents, setRegisteredComponents] = useState<any[]>([])
+  const [availableComponents, setAvailableComponents] = useState<any[]>([])
 
   // GraphQL查询和变更
   const { data: componentsData, loading: componentsLoading, refetch: refetchComponents } = useQuery(GET_UI_COMPONENTS)
@@ -83,6 +86,27 @@ export default function ComponentManage() {
   const categories = ['全部', ...(categoriesData?.componentCategories || [])]
   const stats: ComponentStats | undefined = statsData?.componentStats
 
+  // 获取已注册组件和可用组件
+  useEffect(() => {
+    const fetchRegisteredComponents = () => {
+      try {
+        const allRegistered = getAllRegisteredComponents()
+        setRegisteredComponents(allRegistered)
+        
+        // 过滤出未保存的组件（不在数据库中的）
+        const savedComponentNames = new Set(components.map((comp: UIComponent) => comp.name))
+        const available = allRegistered.filter((comp: any) => !savedComponentNames.has(comp.name))
+        setAvailableComponents(available)
+      } catch (error) {
+        console.error('获取已注册组件失败:', error)
+        setRegisteredComponents([])
+        setAvailableComponents([])
+      }
+    }
+    
+    fetchRegisteredComponents()
+  }, [components])
+
 
   const [newComponent, setNewComponent] = useState<Partial<CreateUIComponentInput>>({
     name: '',
@@ -95,6 +119,39 @@ export default function ComponentManage() {
     props: [],
     tagNames: []
   })
+
+  // 当选择组件时自动填充信息
+  const handleComponentSelect = (componentName: string) => {
+    const selectedComp = registeredComponents.find(comp => comp.name === componentName)
+    if (selectedComp) {
+      setNewComponent({
+        name: selectedComp.name,
+        description: selectedComp.description || `${selectedComp.name} 组件`,
+        category: mapCategoryFromRegistered(selectedComp.category),
+        template: selectedComp.template || `:::react{component="${selectedComp.name}"}\n内容\n:::`,
+        version: selectedComp.version || '1.0.0',
+        author: selectedComp.author || 'User',
+        status: ComponentStatus.ACTIVE,
+        props: [],
+        tagNames: selectedComp.tags || []
+      })
+    }
+  }
+
+  // 映射已注册组件的分类到数据库分类
+  const mapCategoryFromRegistered = (regCategory: string): ComponentCategory => {
+    const categoryMap: Record<string, ComponentCategory> = {
+      'UI组件': ComponentCategory.UI_COMPONENT,
+      '交互组件': ComponentCategory.INTERACTION,
+      '3D组件': ComponentCategory.THREE_D,
+      '图表组件': ComponentCategory.DATA_DISPLAY, // 图表归为数据显示
+      '表单组件': ComponentCategory.FORM,
+      '布局组件': ComponentCategory.LAYOUT,
+      '媒体组件': ComponentCategory.UI_COMPONENT, // 媒体归为UI组件
+      '其他': ComponentCategory.UI_COMPONENT // 其他归为UI组件
+    }
+    return categoryMap[regCategory] || ComponentCategory.UI_COMPONENT
+  }
 
   // 过滤组件
   const filteredComponents = components.filter((component: UIComponent) => {
@@ -266,12 +323,36 @@ export default function ComponentManage() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium">组件名称</label>
-                    <Input
+                    <label className="text-sm font-medium">选择已注册组件</label>
+                    <Select
                       value={newComponent.name}
-                      onChange={(e) => setNewComponent({ ...newComponent, name: e.target.value })}
-                      placeholder="MyComponent"
-                    />
+                      onValueChange={handleComponentSelect}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={availableComponents.length > 0 ? "选择组件" : "暂无可用组件"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableComponents.length === 0 ? (
+                          <div className="p-2 text-sm text-gray-500">
+                            暂无未保存的已注册组件
+                          </div>
+                        ) : (
+                          availableComponents.map((comp) => (
+                            <SelectItem key={comp.name} value={comp.name}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{comp.name}</span>
+                                <span className="text-xs text-gray-500">{comp.category || '未分类'}</span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    {availableComponents.length === 0 && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        💡 提示：可用组件来自 packages/ui-components 中已注册但未保存的组件
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium">分类</label>
@@ -293,43 +374,87 @@ export default function ComponentManage() {
 
                 <div>
                   <label className="text-sm font-medium">描述</label>
-                  <Input
-                    value={newComponent.description}
-                    onChange={(e) => setNewComponent({ ...newComponent, description: e.target.value })}
-                    placeholder="组件的功能描述"
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      value={newComponent.description}
+                      onChange={(e) => setNewComponent({ ...newComponent, description: e.target.value })}
+                      placeholder="组件的功能描述"
+                    />
+                    {newComponent.name && (
+                      <div className="text-xs text-gray-500">
+                        🔄 描述已根据选择的组件自动填充，可自定义修改
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium">模板代码</label>
-                  <Textarea
-                    value={newComponent.template}
-                    onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
-                    placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
-                    className="w-full h-32 p-3 text-sm font-mono rounded-md border border-input bg-background resize-none"
-                  />
+                  <div className="space-y-2">
+                    <Textarea
+                      value={newComponent.template}
+                      onChange={(e) => setNewComponent({ ...newComponent, template: e.target.value })}
+                      placeholder=":::react{component=&quot;MyComponent&quot;}&#10;组件内容&#10;:::"
+                      className="w-full h-32 p-3 text-sm font-mono rounded-md border border-input bg-background resize-none"
+                    />
+                    {newComponent.name && (
+                      <div className="text-xs text-gray-500">
+                        📝 模板代码已自动生成，可根据需要修改
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium">标签 (逗号分隔)</label>
-                  <Input
-                    value={newComponent.tagNames?.join(', ') || ''}
-                    onChange={(e) => setNewComponent({
-                      ...newComponent,
-                      tagNames: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
-                    })}
-                    placeholder="UI, 按钮, 交互"
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      value={newComponent.tagNames?.join(', ') || ''}
+                      onChange={(e) => setNewComponent({
+                        ...newComponent,
+                        tagNames: e.target.value.split(',').map(tag => tag.trim()).filter(Boolean)
+                      })}
+                      placeholder="UI, 按钮, 交互"
+                    />
+                    {newComponent.name && newComponent.tagNames && newComponent.tagNames.length > 0 && (
+                      <div className="text-xs text-gray-500">
+                        🏷️ 标签已根据组件信息自动填充，可自定义修改
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  取消
-                </Button>
-                <Button onClick={handleAddComponent}>
-                  添加组件
-                </Button>
+              <div className="space-y-4">
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    取消
+                  </Button>
+                  <Button 
+                    onClick={handleAddComponent}
+                    disabled={!newComponent.name || !newComponent.description || !newComponent.template}
+                  >
+                    添加组件
+                  </Button>
+                </div>
+                
+                {/* 组件信息预览 */}
+                {newComponent.name && (
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <h4 className="text-sm font-medium mb-2">📋 组件信息预览</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div><strong>名称:</strong> {newComponent.name}</div>
+                      <div><strong>分类:</strong> {newComponent.category}</div>
+                      <div><strong>版本:</strong> {newComponent.version}</div>
+                      <div><strong>作者:</strong> {newComponent.author}</div>
+                    </div>
+                    {newComponent.tagNames && newComponent.tagNames.length > 0 && (
+                      <div className="mt-2 text-xs">
+                        <strong>标签:</strong> {newComponent.tagNames.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>

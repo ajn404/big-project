@@ -488,9 +488,10 @@ return createElement(
                         insertAtNewLine(component.template)
                         setShowComponentMenu(false)
                       }}
+                      title={component.description}
                     >
-                      <div className="font-medium text-sm">{component.name}</div>
-                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      <div className="font-medium text-sm max-w-full text-ellipsis overflow-auto">{component.name}</div>
+                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-full text-ellipsis overflow-auto">
                         {component.description}
                       </div>
                     </Button>
