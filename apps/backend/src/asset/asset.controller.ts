@@ -18,6 +18,7 @@ import { AssetService } from './asset.service';
 import { CreateAssetInput } from './dto/create-asset.input';
 import { UpdateAssetInput } from './dto/update-asset.input';
 import { AssetType } from '../database/entities/asset.entity';
+import { createContentDispositionHeader } from '../utils/filename-encoding';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 
@@ -80,7 +81,11 @@ export class AssetController {
     try {
       await fs.access(filePath);
       res.setHeader('Content-Type', asset.mimeType);
-      res.setHeader('Content-Disposition', `attachment; filename="${asset.originalName}"`);
+      
+      // 使用工具函数生成正确的 Content-Disposition 头
+      const contentDisposition = createContentDispositionHeader(asset.originalName, false);
+      res.setHeader('Content-Disposition', contentDisposition);
+      
       res.sendFile(path.resolve(filePath));
     } catch {
       throw new NotFoundException('File not found');

@@ -2,9 +2,7 @@ import { Resolver, Query, Mutation, Args, ID, Int, Float, ObjectType, Field } fr
 // 移除了文件上传相关的装饰器，现在使用REST API
 import { AssetService } from './asset.service';
 import { Asset, AssetType } from '../database/entities/asset.entity';
-import { CreateAssetInput } from './dto/create-asset.input';
 import { UpdateAssetInput } from './dto/update-asset.input';
-import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.mjs';
 
 @Resolver(() => Asset)
 export class AssetResolver {

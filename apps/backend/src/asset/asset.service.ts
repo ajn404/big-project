@@ -7,6 +7,7 @@ import { UpdateAssetInput } from './dto/update-asset.input';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { fixFilenameEncoding, validateFilename } from '../utils/filename-encoding';
 
 @Injectable()
 export class AssetService {
@@ -39,7 +40,15 @@ export class AssetService {
     file: Express.Multer.File,
     input: CreateAssetInput,
   ): Promise<Asset> {
-    const fileExtension = path.extname(file.originalname);
+    // 修复文件名编码问题
+    const fixedOriginalName = fixFilenameEncoding(file.originalname);
+    
+    // 验证文件名安全性
+    if (!validateFilename(fixedOriginalName)) {
+      throw new Error('文件名包含非法字符');
+    }
+    
+    const fileExtension = path.extname(fixedOriginalName);
     const fileName = `${uuidv4()}${fileExtension}`;
     const filePath = path.join(this.uploadDir, fileName);
     
@@ -48,12 +57,20 @@ export class AssetService {
 
     // 调试：记录MIME类型和识别的类型
     const detectedType = this.getAssetType(file.mimetype);
-    console.log(`File: ${file.originalname}, MIME: ${file.mimetype}, Detected Type: ${detectedType}`);
     const port = process.env.PORT || 3001;
+    
+    console.log('文件上传信息:', {
+      original: file.originalname,
+      fixed: fixedOriginalName,
+      fileName,
+      mimeType: file.mimetype,
+      size: file.size
+    });
+    
     // 创建资源记录
     const asset = this.assetRepository.create({
-      name: file.originalname,
-      originalName: file.originalname,
+      name: fixedOriginalName,
+      originalName: fixedOriginalName,
       url: `http://localhost:${port}/uploads/${fileName}`,
       mimeType: file.mimetype,
       size: file.size,
@@ -62,7 +79,8 @@ export class AssetService {
       alt: input.alt,
       metadata: {
         fileName,
-        originalName: file.originalname,
+        originalName: fixedOriginalName,
+        rawOriginalName: file.originalname, // 保存原始文件名用于调试
         uploadDate: new Date().toISOString(),
         detectedMimeType: file.mimetype,
       },

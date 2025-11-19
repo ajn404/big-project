@@ -15,6 +15,8 @@ import { memoryStorage } from 'multer';
       limits: {
         fileSize: 10 * 1024 * 1024, // 10MB
       },
+      preservePath: false,
+      // 移除 fileFilter 中的编码转换，在 service 中处理更合适
     }),
   ],
   providers: [AssetResolver, AssetService],
