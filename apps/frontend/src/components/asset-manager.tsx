@@ -16,7 +16,7 @@ import {
 import { 
   Upload, 
   Search, 
-  Download, 
+  EyeIcon, 
   Edit, 
   Trash2, 
   Image as ImageIcon,
@@ -218,7 +218,7 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onDownload, selectionMod
 
   return (
     <Card className={`group overflow-hidden transition-all hover:shadow-md ${
-      selectionMode ? 'cursor-pointer hover:ring-2 hover:ring-blue-500' : ''
+      selectionMode ? 'cursor-pointer  hover:ring-2 hover:ring-blue-500' : ''
     }`} onClick={onSelect}>
       <CardContent className="p-0">
         <div className="aspect-square relative bg-gray-50 flex items-center justify-center">
@@ -240,7 +240,7 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onDownload, selectionMod
                   <Edit className="w-4 h-4" />
                 </Button>
                 <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onDownload(); }}>
-                  <Download className="w-4 h-4" />
+                  <EyeIcon className="w-4 h-4" />
                 </Button>
                 <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
                   <Trash2 className="w-4 h-4" />
