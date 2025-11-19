@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -347,19 +354,22 @@ prerequisites: ["前置要求1", "前置要求2"]
 
                 <div>
                   <label className="block text-sm font-medium mb-2">分类 *</label>
-                  <select
-                    className="w-full p-3 border border-input rounded-md"
+                  <Select
                     value={formData.categoryName}
-                    onChange={(e) => handleInputChange('categoryName', e.target.value)}
-                    required
+                    onValueChange={(value) => handleInputChange('categoryName', value)}
                   >
-                    <option value="">选择分类</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.name}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="选择分类" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">选择分类</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="md:col-span-2">
@@ -375,17 +385,21 @@ prerequisites: ["前置要求1", "前置要求2"]
 
                 <div>
                   <label className="block text-sm font-medium mb-2">难度</label>
-                  <select
-                    className="w-full p-3 border border-input rounded-md"
+                  <Select
                     value={formData.difficulty}
-                    onChange={(e) => handleInputChange('difficulty', e.target.value)}
+                    onValueChange={(value) => handleInputChange('difficulty', value)}
                   >
-                    {DIFFICULTY_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="选择难度" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIFFICULTY_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>

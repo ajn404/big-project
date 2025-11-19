@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Upload, 
   Search, 
@@ -115,18 +122,22 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
           </div>
         </div>
 
-        <select
+        <Select
           value={typeFilter || ''}
-          onChange={(e) => setTypeFilter(e.target.value as AssetType || undefined)}
-          className="px-3 py-2 border border-gray-300 rounded-md"
+          onValueChange={(value) => setTypeFilter(value as AssetType || undefined)}
         >
-          <option value="">所有类型</option>
-          {typeOptions.map((type) => (
-            <option key={type} value={type}>
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="所有类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">所有类型</SelectItem>
+            {typeOptions.map((type) => (
+              <SelectItem key={type} value={type}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Dialog open={showUpload} onOpenChange={setShowUpload}>
           <DialogTrigger asChild>

@@ -7,6 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Plus,
   Search,
   Edit,
@@ -280,15 +287,19 @@ export default function ComponentManage() {
                   </div>
                   <div>
                     <label className="text-sm font-medium">分类</label>
-                    <select
+                    <Select
                       value={newComponent.category}
-                      onChange={(e) => setNewComponent({ ...newComponent, category: e.target.value as ComponentCategory })}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                      onValueChange={(value) => setNewComponent({ ...newComponent, category: value as ComponentCategory })}
                     >
-                      {categories.slice(1).map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="选择分类" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.slice(1).map(category => (
+                          <SelectItem key={category} value={category}>{category}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -353,15 +364,19 @@ export default function ComponentManage() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <select
+          <Select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="h-10 px-3 rounded-md border border-input bg-background"
+            onValueChange={(value) => setSelectedCategory(value)}
           >
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="选择分类" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(category => (
+                <SelectItem key={category} value={category}>{category}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -547,15 +562,19 @@ export default function ComponentManage() {
               </div>
               <div>
                 <label className="text-sm font-medium">分类</label>
-                <select
+                <Select
                   value={newComponent.category}
-                  onChange={(e) => setNewComponent({ ...newComponent, category: e.target.value as ComponentCategory })}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  onValueChange={(value) => setNewComponent({ ...newComponent, category: value as ComponentCategory })}
                 >
-                  {categories.slice(1).map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="选择分类" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.slice(1).map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
