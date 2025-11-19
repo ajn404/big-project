@@ -70,6 +70,9 @@ export const getComponentsByCategory = (category: ComponentCategory): ComponentI
 
 export { initializeComponents }
 
+// 导出工具函数
+export * from './lib'
+
 // 导出自动注册相关功能
 export { 
   createAutoRegisterComponent, 

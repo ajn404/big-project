@@ -2,16 +2,22 @@
   "name": "@workspace/ui-components",
   "version": "1.0.0",
   "description": "可重用的UI组件库",
-  "main": "src/index.ts",
-  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": "./src/index.ts",
-      "require": "./src/index.ts"
-    }
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles.css": "./src/styles.css",
+    "./package.json": "./package.json"
   },
   "files": [
-    "src"
+    "dist",
+    "src",
+    "README.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -31,6 +37,14 @@
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.181.0",
     "gsap": "^3.13.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-slider": "^1.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.294.0",
+    "tailwind-merge": "^2.6.0"
   }
 }

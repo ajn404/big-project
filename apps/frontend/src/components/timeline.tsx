@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@workspace/ui-components'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui-components'
 import { formatDate, getDifficultyColor, getDifficultyLabel } from '@/lib/utils'
 import { Calendar, Clock } from 'lucide-react'
 

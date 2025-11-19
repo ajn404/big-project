@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import { X, Home, BookOpen, Info, Folder, Tag, Settings, Component, FolderOpen, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { X, Home, BookOpen, Info, Folder, Tag, Component, FolderOpen, Plus } from 'lucide-react'
+import { Button } from '@workspace/ui-components'
 import { useQuery } from '@apollo/client'
 import { GET_CATEGORIES, GET_TAGS } from '@/lib/graphql/queries'
 import { useFilter } from '@/contexts/filter-context'
@@ -80,7 +80,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           {/* Header */}
           <div className="flex h-16 items-center justify-between  px-6">
             <Link to="/" className="flex items-center space-x-2 " onClick={handleNavigationClick}>
-              <div className="h-8 w-8 rounded-lg bg-primary"></div>
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-b from-cyan-900 to-[#eee]  dark:bg-gradient-to-b dark:from-cyan-500 dark:to-white"></div>
               <span className="font-bold">学习实践</span>
             </Link>
             <Button

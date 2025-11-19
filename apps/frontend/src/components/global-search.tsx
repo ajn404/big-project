@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Dialog, DialogContent, DialogDescription, DialogTitle
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+  Dialog, DialogContent, DialogDescription, DialogTitle, Input, Badge, Button
+} from '@workspace/ui-components'
 import {
   Search, FileText, Clock, Tag, Folder, ArrowRight, Loader2, X
 } from 'lucide-react'
@@ -49,26 +46,26 @@ function cleanMarkdownContent(content: string): string {
 // 内容截取和高亮函数
 function getHighlightedContent(content: string, query: string, maxLength: number = 150): JSX.Element[] {
   if (!query.trim()) return [<span key={0}>{content.slice(0, maxLength)}...</span>]
-  
+
   // 清理Markdown内容，获得纯文本
   const cleanContent = cleanMarkdownContent(content)
   const lowerQuery = query.toLowerCase()
   const lowerContent = cleanContent.toLowerCase()
   const matchIndex = lowerContent.indexOf(lowerQuery)
-  
+
   if (matchIndex === -1) {
     // 没有匹配，显示开头部分
     return [<span key={0}>{cleanContent.slice(0, maxLength)}...</span>]
   }
-  
+
   // 计算截取范围，确保匹配内容在中间
   const start = Math.max(0, matchIndex - Math.floor(maxLength / 3))
   const end = Math.min(cleanContent.length, start + maxLength)
   const excerpt = cleanContent.slice(start, end)
-  
+
   const prefix = start > 0 ? '...' : ''
   const suffix = end < cleanContent.length ? '...' : ''
-  
+
   return [
     <span key="prefix">{prefix}</span>,
     ...highlightText(excerpt, query),

@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Textarea, Button, Badge } from '@workspace/ui-components'
 import {
   Bold,
   Italic,
@@ -60,7 +58,7 @@ export function EnhancedMDXEditor({
   const toggleFullscreen = () => {
     const newFullscreenState = !isFullscreen
     setIsFullscreen(newFullscreenState)
-    
+
     // 进入全屏时，确保退出预览模式（因为全屏已经是双栏显示）
     if (newFullscreenState && isPreview) {
       setIsPreview(false)
@@ -342,15 +340,15 @@ return createElement(
   // 同步滚动处理
   const handleEditorScroll = () => {
     if (!isFullscreen || !textareaRef.current || !previewRef.current) return
-    
+
     const textarea = textareaRef.current
     const preview = previewRef.current
-    
+
     // 计算编辑器的滚动百分比
     const scrollTop = textarea.scrollTop
     const scrollHeight = textarea.scrollHeight - textarea.clientHeight
     const scrollPercentage = scrollHeight > 0 ? scrollTop / scrollHeight : 0
-    
+
     // 同步到预览区域
     const previewScrollHeight = preview.scrollHeight - preview.clientHeight
     if (previewScrollHeight > 0) {
@@ -371,11 +369,10 @@ return createElement(
   return (
     <div
       ref={editorRef}
-      className={`border border-input rounded-lg overflow-hidden transition-all duration-200 ${
-        isFullscreen 
-          ? "fixed inset-0 z-50 bg-background rounded-none border-0" 
+      className={`border border-input rounded-lg overflow-hidden transition-all duration-200 ${isFullscreen
+          ? "fixed inset-0 z-50 bg-background rounded-none border-0"
           : ""
-      }`}
+        }`}
     >
       {/* 工具栏 */}
       <div className="bg-muted p-2 border-b border-border">
@@ -518,10 +515,10 @@ return createElement(
       )}
 
       {/* 编辑器区域 */}
-      <div 
-        className="flex" 
-        style={{ 
-          height: isFullscreen ? "calc(100vh - 120px)" : height 
+      <div
+        className="flex"
+        style={{
+          height: isFullscreen ? "calc(100vh - 120px)" : height
         }}
       >
         {/* 全屏模式：左右分栏 */}
@@ -539,7 +536,7 @@ return createElement(
                   {value.length} 字符
                 </div>
               </div>
-              
+
               {/* 编辑器区域 */}
               <div className="flex-1 relative">
                 <Textarea
@@ -570,7 +567,7 @@ return createElement(
                   {value.length > 0 ? `${value.split('\n').length} 行` : '空白文档'}
                 </div>
               </div>
-              
+
               {/* 预览内容 */}
               <div ref={previewRef} className="flex-1 p-4 overflow-auto">
                 <div className="max-w-none prose prose-sm dark:prose-invert">

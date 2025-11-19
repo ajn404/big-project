@@ -1,18 +1,12 @@
 import { useState } from 'react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components'
+import { Button } from '@workspace/ui-components'
+import { Input } from '@workspace/ui-components'
+import { Badge } from '@workspace/ui-components'
+import { Textarea } from '@workspace/ui-components'
 import { X, Upload, FileText, Download } from 'lucide-react'
 
 interface Category {

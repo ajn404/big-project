@@ -1,5 +1,5 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui-components'
+import { Badge } from '@workspace/ui-components'
 import { Code, Database, Palette, Zap } from 'lucide-react'
 
 export function AboutPage() {

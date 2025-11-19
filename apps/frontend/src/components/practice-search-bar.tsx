@@ -1,6 +1,6 @@
 import React from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui-components'
+import { Input } from '@workspace/ui-components'
 import { Search } from 'lucide-react'
 
 interface PracticeSearchBarProps {

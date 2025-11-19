@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
+import { Button } from '@workspace/ui-components'
 import {
   Component,
   FileText,

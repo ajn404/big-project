@@ -1,8 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
+import { Input, Button, Textarea,Card, CardContent } from '@workspace/ui-components';
 import { Upload, X, FileIcon, ImageIcon } from 'lucide-react';
 // 不再需要UPLOAD_ASSET，改用REST API
 import { AssetType, CreateAssetInput } from '@/types/asset';
@@ -89,7 +86,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUpl
       });
 
       const results = await Promise.all(uploadPromises);
-      
+
       results.forEach((asset: any) => {
         if (asset && onSuccess) {
           onSuccess(asset);
@@ -100,7 +97,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUpl
       setFiles([]);
       setDescription('');
       setAlt('');
-      
+
     } catch (error) {
       console.error('Upload failed:', error);
     } finally {
@@ -140,7 +137,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUpl
             <div className="space-y-2">
               <p className="text-lg font-medium">拖拽文件到这里或点击选择</p>
               <p className="text-sm text-gray-500">
-                {allowedTypes 
+                {allowedTypes
                   ? `支持 ${allowedTypes.join(', ')} 类型文件`
                   : '支持所有类型文件'
                 }

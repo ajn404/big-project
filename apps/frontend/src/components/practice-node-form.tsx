@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE, UPDATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components'
+import { Button } from '@workspace/ui-components'
+import { Input } from '@workspace/ui-components'
+import { Badge } from '@workspace/ui-components'
 import { X, Save } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
-import { Textarea } from '@/components/ui/textarea'
+import { Textarea } from '@workspace/ui-components'
 
 interface Category {
   id: string

@@ -1,5 +1,4 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components';
 import { AssetManager } from './asset-manager';
 import { Asset, AssetType } from '@/types/asset';
 

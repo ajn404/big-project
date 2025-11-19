@@ -1,18 +1,16 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import  { useState, useRef, useCallback, useEffect } from 'react';
+import { Button } from '@workspace/ui-components';
+import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components';
+import { Slider } from '@workspace/ui-components';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components';
 import { 
   RotateCw, 
   RotateCcw, 
   FlipHorizontal, 
   FlipVertical,
-  Crop,
   Download,
   Undo,
-  Redo,
-  Palette
+  Redo
 } from 'lucide-react';
 
 interface ImageEditorProps {

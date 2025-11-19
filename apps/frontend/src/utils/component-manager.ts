@@ -1,4 +1,3 @@
-// 直接导入 @workspace/ui-components
 import { 
   componentRegistry as uiComponentRegistry,
   COMPONENT_CATEGORIES as uiCategories,
@@ -14,7 +13,6 @@ const COMPONENT_CATEGORIES = uiCategories
 export type ComponentInfo = UIComponentInfo
 export type ComponentCategory = UIComponentCategory
 
-console.log('✅ Using @workspace/ui-components package')
 
 // 组件管理工具类
 export class ComponentManager {

@@ -1,5 +1,4 @@
 import React, { Suspense } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Code, AlertTriangle } from 'lucide-react'
 import ComponentManager from '@/utils/component-manager'
 import ComponentErrorBoundary from './ComponentErrorBoundary'
@@ -9,8 +8,7 @@ interface ComponentRendererProps {
   props?: Record<string, any>
 }
 
-// 直接使用 @workspace/ui-components
-import { initializeComponents, componentRegistry as uiRegistry } from '@workspace/ui-components'
+import { initializeComponents, componentRegistry as uiRegistry, Alert, AlertDescription } from '@workspace/ui-components'
 
 // 获取组件注册表
 const getComponentRegistry = () => {

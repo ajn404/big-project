@@ -1,9 +1,9 @@
 import React from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_CATEGORIES, GET_TAGS } from '@/lib/graphql/queries'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui-components'
+import { Badge } from '@workspace/ui-components'
+import { Button } from '@workspace/ui-components'
 import { X } from 'lucide-react'
 
 interface PracticeFiltersProps {

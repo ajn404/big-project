@@ -1,18 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components';
 import { 
   Upload, 
   Search, 

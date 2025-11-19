@@ -1,5 +1,5 @@
 import { AssetManager } from '@/components/asset-manager';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components';
 import { useQuery } from '@apollo/client';
 import { GET_ASSET_STATS } from '@/lib/graphql/asset-queries';
 import { AssetStats } from '@/types/asset';
