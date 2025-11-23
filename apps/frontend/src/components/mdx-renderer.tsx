@@ -16,9 +16,43 @@ import { Button } from '@workspace/ui-components'
 import { Alert, AlertDescription } from '@workspace/ui-components'
 import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Play } from 'lucide-react'
 import { ComponentRenderer } from './component-renderer'
+import { generateHeadingId } from '@/lib/heading-utils'
+import { ImageProvider, useImageContext } from '@/contexts/image-context'
+import { ImagePreview } from './image-preview'
 
 interface MDXRendererProps {
   content: string
+}
+
+// MDX图片组件，支持预览
+function MDXImage({ src, alt, ...props }: any) {
+  const { addImage, openPreview, images } = useImageContext()
+  const [isRegistered, setIsRegistered] = React.useState(false)
+  
+  // 只在第一次渲染时注册图片，避免重复调用
+  React.useEffect(() => {
+    if (src && !isRegistered) {
+      addImage({ src, alt: alt || '' })
+      setIsRegistered(true)
+    }
+  }, [src, alt, addImage, isRegistered])
+  
+  const handleClick = React.useCallback(() => {
+    const index = images.findIndex(img => img.src === src)
+    if (index !== -1) {
+      openPreview(index)
+    }
+  }, [images, src, openPreview])
+  
+  return (
+    <img 
+      src={src} 
+      alt={alt || ''} 
+      className="max-w-full h-auto rounded-lg my-6 shadow-md border border-border cursor-pointer hover:shadow-lg transition-shadow" 
+      onClick={handleClick}
+      {...props} 
+    />
+  )
 }
 
 // 代码沙箱组件
@@ -282,14 +316,16 @@ const customComponents = {
 
   // 标题组件 - 添加锚点
   h1({ children, ...props }: any) {
+    const id = generateHeadingId(String(children))
     return (
       <h1 
+        id={id}
         className="text-3xl font-bold mb-6 mt-8 first:mt-0 pb-2 border-b border-border relative group" 
         {...props}
       >
         {children}
         <a 
-          href={`#${String(children).toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-')}`}
+          href={`#${id}`}
           className="absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
         >
           #
@@ -299,14 +335,16 @@ const customComponents = {
   },
 
   h2({ children, ...props }: any) {
+    const id = generateHeadingId(String(children))
     return (
       <h2 
+        id={id}
         className="text-2xl font-semibold mb-4 mt-8 relative group" 
         {...props}
       >
         {children}
         <a 
-          href={`#${String(children).toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-')}`}
+          href={`#${id}`}
           className="absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
         >
           #
@@ -316,14 +354,16 @@ const customComponents = {
   },
 
   h3({ children, ...props }: any) {
+    const id = generateHeadingId(String(children))
     return (
       <h3 
+        id={id}
         className="text-xl font-semibold mb-3 mt-6 relative group" 
         {...props}
       >
         {children}
         <a 
-          href={`#${String(children).toLowerCase().replace(/[^\w\u4e00-\u9fff]+/g, '-')}`}
+          href={`#${id}`}
           className="absolute -left-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
         >
           #
@@ -415,16 +455,9 @@ const customComponents = {
     )
   },
 
-  // 图片 - 响应式和样式优化
+  // 图片 - 响应式和样式优化，支持预览
   img({ src, alt, ...props }: any) {
-    return (
-      <img 
-        src={src} 
-        alt={alt} 
-        className="max-w-full h-auto rounded-lg my-6 shadow-md border border-border" 
-        {...props} 
-      />
-    )
+    return <MDXImage src={src} alt={alt} {...props} />
   },
 
   // 表格 - 使用 figure 避免嵌套问题
@@ -613,6 +646,56 @@ const customComponents = {
   }
 }
 
+// 内部组件，使用图片上下文
+function MDXContent({ content }: { content: string }) {
+  const { images, currentIndex, isPreviewOpen, closePreview, goToPrevious, goToNext, clearImages } = useImageContext()
+
+  // 组件卸载时清理图片
+  React.useEffect(() => {
+    return () => {
+      clearImages()
+    }
+  }, [clearImages])
+
+  return (
+    <>
+      <div className="prose prose-slate dark:prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent">
+        <ReactMarkdown
+          remarkPlugins={[
+            remarkGfm,        // GitHub Flavored Markdown (表格、删除线、任务列表等)
+            remarkMath,       // 数学公式支持
+            remarkToc,        // 目录生成
+            remarkCustomComponents, // 自定义组件解析
+            remarkHighlight,  // 高亮文本处理
+          ]}
+          rehypePlugins={[
+            rehypeRaw,        // 处理原始HTML
+            // rehypeSlug,    // 禁用自动ID生成，使用我们的自定义函数
+            rehypeHighlight,  // 代码高亮
+            rehypeKatex,      // 数学公式渲染
+          ]}
+          components={customComponents}
+          // 配置选项避免嵌套问题
+          skipHtml={false}
+          disallowedElements={[]}
+        >
+          {content}
+        </ReactMarkdown>
+      </div>
+      
+      {/* 图片预览组件 */}
+      <ImagePreview
+        isOpen={isPreviewOpen}
+        onClose={closePreview}
+        currentIndex={currentIndex}
+        images={images}
+        onPrevious={goToPrevious}
+        onNext={goToNext}
+      />
+    </>
+  )
+}
+
 export function MDXRenderer({ content }: MDXRendererProps) {
   if (!content?.trim()) {
     return (
@@ -625,28 +708,8 @@ export function MDXRenderer({ content }: MDXRendererProps) {
   }
 
   return (
-    <div className="prose prose-slate dark:prose-invert max-w-none prose-pre:p-0 prose-pre:bg-transparent">
-      <ReactMarkdown
-        remarkPlugins={[
-          remarkGfm,        // GitHub Flavored Markdown (表格、删除线、任务列表等)
-          remarkMath,       // 数学公式支持
-          remarkToc,        // 目录生成
-          remarkCustomComponents, // 自定义组件解析
-          remarkHighlight,  // 高亮文本处理
-        ]}
-        rehypePlugins={[
-          rehypeRaw,        // 处理原始HTML
-          rehypeSlug,       // 为标题添加 id
-          rehypeHighlight,  // 代码高亮
-          rehypeKatex,      // 数学公式渲染
-        ]}
-        components={customComponents}
-        // 配置选项避免嵌套问题
-        skipHtml={false}
-        disallowedElements={[]}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <ImageProvider>
+      <MDXContent content={content} />
+    </ImageProvider>
   )
 }

@@ -8,6 +8,9 @@ import { formatDate, getDifficultyColor, getDifficultyLabel } from '@/lib/utils'
 import { ArrowLeft, Calendar, Clock, Target, BookOpen } from 'lucide-react'
 import { MDXRenderer } from '@/components/mdx-renderer'
 import { ComponentRenderer } from '@/components/component-renderer'
+import { TableOfContents } from '@/components/table-of-contents'
+import { useContext } from 'react'
+import { LayoutContext } from '@/components/layout'
 
 export function PracticeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,15 +18,22 @@ export function PracticeDetailPage() {
     variables: { id },
     skip: !id,
   })
+  
+  // 获取布局上下文中的侧边栏状态
+  const layoutContext = useContext(LayoutContext)
+  const sidebarOpen = layoutContext?.sidebarOpen ?? true
 
   if (loading) return <div>加载中...</div>
   if (error) return <div>错误: {error.message}</div>
   if (!data?.practiceNode) return <div>未找到该实践项目</div>
 
   const node = data.practiceNode
+  const showToc = node.contentType === 'MDX' && !sidebarOpen // 只在MDX文章且侧边栏收起时显示目录
 
   return (
-    <div className="space-y-8">
+    <div className="flex gap-8 justify-center">
+      {/* 主内容区域 */}
+      <div className={`flex-1 space-y-8  max-w-4xl `}>
       {/* Back Button */}
       <Button asChild variant="outline">
         <Link to="/practice">
@@ -137,6 +147,14 @@ export function PracticeDetailPage() {
           </Link>
         </Button>
       </div>
+      </div>
+
+      {/* 右侧目录 - 仅在MDX文章且侧边栏收起时显示 */}
+      {showToc && (
+        <div className="hidden lg:block w-80 flex-shrink-0">
+          <TableOfContents content={node.content || ''} />
+        </div>
+      )}
     </div>
   )
 }

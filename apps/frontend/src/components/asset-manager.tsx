@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components';
-import { 
-  Upload, 
-  Search, 
-  EyeIcon, 
-  Edit, 
-  Trash2, 
+import {
+  Upload,
+  Search,
+  EyeIcon,
+  Edit,
+  Trash2,
   Image as ImageIcon,
   FileVideo,
   FileText,
@@ -16,6 +16,7 @@ import {
 import { GET_ASSETS, REMOVE_ASSET, UPDATE_ASSET } from '@/lib/graphql/asset-queries';
 import { Asset, AssetType, UpdateAssetInput } from '@/types/asset';
 import { AssetUpload } from './asset-upload';
+import { ImagePreview } from './image-preview';
 import { useDebounce } from 'use-debounce';
 
 interface AssetManagerProps {
@@ -48,6 +49,11 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [debouncedSearch] = useDebounce(search, 300);
+
+  // 图片预览状态
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImages, setPreviewImages] = useState<Array<{ src: string; alt: string }>>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data, loading, refetch } = useQuery(GET_ASSETS, {
     variables: {
@@ -82,17 +88,45 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
     await updateAsset({ variables: { input } });
   }, [updateAsset]);
 
-  const handleDownload = useCallback((asset: Asset) => {
-    window.open(asset.url, '_blank');
-  }, []);
-
-  const filteredAssets = data?.assets?.filter((asset: Asset) => 
+  const filteredAssets = data?.assets?.filter((asset: Asset) =>
     !allowedTypes || allowedTypes.includes(asset.type)
   ) || [];
 
-  const typeOptions = Object.values(AssetType).filter(type => 
+
+  const handlePreview = useCallback((asset: Asset) => {
+    if (asset.type === AssetType.IMAGE) {
+      // 获取所有图片资源
+      const imageAssets = filteredAssets.filter((a: Asset) => a.type === AssetType.IMAGE);
+      const images = imageAssets.map((a: Asset) => ({
+        src: a.url,
+        alt: a.alt || a.name
+      }));
+
+      // 找到当前图片的索引
+      const currentIndex = imageAssets.findIndex((a: Asset) => a.id === asset.id);
+
+      setPreviewImages(images);
+      setCurrentImageIndex(Math.max(0, currentIndex));
+      setPreviewOpen(true);
+    } else {
+      // 非图片资源仍然使用window.open
+      window.open(asset.url, '_blank');
+    }
+  }, [filteredAssets]);
+
+
+  const typeOptions = Object.values(AssetType).filter(type =>
     !allowedTypes || allowedTypes.includes(type)
   );
+
+  // 图片预览导航函数
+  const handlePreviousImage = useCallback(() => {
+    setCurrentImageIndex((prev) => (prev > 0 ? prev - 1 : previewImages.length - 1));
+  }, [previewImages.length]);
+
+  const handleNextImage = useCallback(() => {
+    setCurrentImageIndex((prev) => (prev < previewImages.length - 1 ? prev + 1 : 0));
+  }, [previewImages.length]);
 
   return (
     <div className="space-y-4">
@@ -172,7 +206,7 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
               onSelect={selectionMode ? () => onSelect?.(asset) : undefined}
               onEdit={() => handleEdit(asset)}
               onDelete={() => handleDelete(asset.id)}
-              onDownload={() => handleDownload(asset)}
+              onPreview={() => handlePreview(asset)}
               selectionMode={selectionMode}
             />
           ))
@@ -188,6 +222,16 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
           onSave={handleSaveEdit}
         />
       )}
+
+      {/* 图片预览 */}
+      <ImagePreview
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        currentIndex={currentImageIndex}
+        images={previewImages}
+        onPrevious={handlePreviousImage}
+        onNext={handleNextImage}
+      />
     </div>
   );
 }
@@ -197,17 +241,16 @@ interface AssetCardProps {
   onSelect?: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  onDownload: () => void;
+  onPreview: () => void;
   selectionMode: boolean;
 }
 
-function AssetCard({ asset, onSelect, onEdit, onDelete, onDownload, selectionMode }: AssetCardProps) {
+function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, selectionMode }: AssetCardProps) {
   const IconComponent = getAssetIcon(asset.type);
 
   return (
-    <Card className={`group overflow-hidden transition-all hover:shadow-md ${
-      selectionMode ? 'cursor-pointer  hover:ring-2 hover:ring-blue-500' : ''
-    }`} onClick={onSelect}>
+    <Card className={`group overflow-hidden transition-all hover:shadow-md ${selectionMode ? 'cursor-pointer  hover:ring-2 hover:ring-blue-500' : ''
+      }`} onClick={onSelect}>
       <CardContent className="p-0">
         <div className="aspect-square relative bg-gray-50 flex items-center justify-center">
           {asset.type === AssetType.IMAGE ? (
@@ -220,14 +263,14 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onDownload, selectionMod
           ) : (
             <IconComponent className="w-12 h-12 text-gray-400" />
           )}
-          
+
           {!selectionMode && (
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
               <div className="flex gap-2">
                 <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onDownload(); }}>
+                <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onPreview(); }}>
                   <EyeIcon className="w-4 h-4" />
                 </Button>
                 <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
