@@ -1,7 +1,26 @@
-import React, { useRef, useMemo, useState, useCallback } from 'react'
+import { useRef, useMemo, useState, useCallback, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
+import { Editor } from '@monaco-editor/react'
+import { Button } from '../ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Badge } from '../ui/badge'
+import { cn } from '../../utils'
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  Code2,
+  Palette,
+  Info,
+  Moon,
+  Sun
+} from 'lucide-react'
 
 interface ShaderPlaygroundProps {
   width?: number
@@ -10,6 +29,15 @@ interface ShaderPlaygroundProps {
   initialFragmentShader?: string
   showEditor?: boolean
   className?: string
+  theme?: 'light' | 'dark' | 'auto'
+}
+
+interface ShaderPreset {
+  name: string
+  description?: string
+  fragment: string
+  vertex?: string
+  category?: string
 }
 
 // 默认的 Book of Shaders 风格片段着色器
@@ -50,13 +78,17 @@ void main() {
 `
 
 // Shader 预设案例库
-const shaderPresets = {
+const shaderPresets: Record<string, ShaderPreset> = {
   rainbow: {
     name: '彩虹渐变',
+    description: '时间驱动的彩色渐变效果',
+    category: '基础',
     fragment: defaultFragmentShader
   },
   circles: {
     name: '同心圆',
+    description: '径向距离创建的动态同心圆',
+    category: '几何',
     fragment: `
 precision mediump float;
 uniform vec2 u_resolution;
@@ -80,6 +112,8 @@ void main() {
   },
   noise: {
     name: '噪声波纹',
+    description: '基于Perlin噪声的多层波纹效果',
+    category: '噪声',
     fragment: `
 precision mediump float;
 uniform vec2 u_resolution;
@@ -123,6 +157,8 @@ void main() {
   },
   fractal: {
     name: 'Mandelbrot 分形',
+    description: '经典的Mandelbrot集合分形图案',
+    category: '分形',
     fragment: `
 precision mediump float;
 uniform vec2 u_resolution;
@@ -165,9 +201,14 @@ void main() {
 }
 
 // Shader 材质组件
-function ShaderMaterial({ fragmentShader, vertexShader }: { 
+function ShaderMaterial({
+  fragmentShader,
+  vertexShader,
+  isRunning = true
+}: {
   fragmentShader: string
-  vertexShader: string 
+  vertexShader: string
+  isRunning?: boolean
 }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const materialRef = useRef<THREE.ShaderMaterial>(null)
@@ -179,7 +220,7 @@ function ShaderMaterial({ fragmentShader, vertexShader }: {
   }), [])
 
   useFrame((state) => {
-    if (materialRef.current) {
+    if (materialRef.current && isRunning) {
       materialRef.current.uniforms.u_time.value = state.clock.elapsedTime
     }
   })
@@ -208,122 +249,307 @@ function ShaderMaterial({ fragmentShader, vertexShader }: {
 }
 
 // 主要的 Shader Playground 组件
-function ShaderPlayground({ 
-  width = 400, 
-  height = 400, 
+function ShaderPlayground({
+  width = 400,
+  height = 400,
   initialVertexShader = defaultVertexShader,
   initialFragmentShader = defaultFragmentShader,
   showEditor = true,
-  className = ''
+  className = '',
+  theme = 'auto'
 }: ShaderPlaygroundProps) {
   const [fragmentShader, setFragmentShader] = useState(initialFragmentShader)
   const [vertexShader, setVertexShader] = useState(initialVertexShader)
   const [selectedPreset, setSelectedPreset] = useState<string>('rainbow')
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(true)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isRunning, setIsRunning] = useState(true)
+  const [activeTab, setActiveTab] = useState<'fragment' | 'vertex'>('fragment')
+
+  // 主题检测
+  useEffect(() => {
+    if (theme === 'auto') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      setIsDarkMode(mediaQuery.matches)
+
+      const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches)
+      mediaQuery.addEventListener('change', handleChange)
+      return () => mediaQuery.removeEventListener('change', handleChange)
+    } else {
+      setIsDarkMode(theme === 'dark')
+    }
+  }, [theme])
 
   const loadPreset = useCallback((presetKey: string) => {
-    const preset = shaderPresets[presetKey as keyof typeof shaderPresets]
+    const preset = shaderPresets[presetKey]
     if (preset) {
       setFragmentShader(preset.fragment)
+      if (preset.vertex) {
+        setVertexShader(preset.vertex)
+      }
       setSelectedPreset(presetKey)
     }
   }, [])
 
-  const handleShaderUpdate = useCallback((newShader: string) => {
-    setFragmentShader(newShader)
+  const handleFragmentShaderUpdate = useCallback((value: string | undefined) => {
+    if (value !== undefined) {
+      setFragmentShader(value)
+    }
+  }, [])
+
+  const handleVertexShaderUpdate = useCallback((value: string | undefined) => {
+    if (value !== undefined) {
+      setVertexShader(value)
+    }
+  }, [])
+
+  const resetShaders = useCallback(() => {
+    setFragmentShader(defaultFragmentShader)
+    setVertexShader(defaultVertexShader)
+    setSelectedPreset('rainbow')
+  }, [])
+
+  const toggleTheme = useCallback(() => {
+    setIsDarkMode(!isDarkMode)
+  }, [isDarkMode])
+
+  // 获取分类的预设
+  const categorizedPresets = useMemo(() => {
+    const categories: Record<string, ShaderPreset[]> = {}
+    Object.entries(shaderPresets).forEach(([key, preset]) => {
+      const category = preset.category || '其他'
+      if (!categories[category]) {
+        categories[category] = []
+      }
+      categories[category].push({ ...preset, name: key })
+    })
+    return categories
   }, [])
 
   return (
-    <div className={`shader-playground ${className}`}>
-      <div className="mb-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">🎨 Shader Playground</h3>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              {isEditing ? '隐藏编辑器' : '显示编辑器'}
-            </button>
-          </div>
-        </div>
-        
-        {/* 预设选择器 */}
-        <div className="flex flex-wrap gap-2">
-          <label className="text-sm font-medium">预设案例:</label>
-          {Object.entries(shaderPresets).map(([key, preset]) => (
-            <button
-              key={key}
-              onClick={() => loadPreset(key)}
-              className={`px-3 py-1 text-xs rounded transition-colors ${
-                selectedPreset === key
-                  ? 'bg-purple-500 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-              }`}
-            >
-              {preset.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* 3D 渲染区域 */}
-        <div className="shader-canvas" style={{ width, height }}>
-          <Canvas
-            camera={{ position: [0, 0, 2], fov: 75 }}
-            style={{ 
-              border: '1px solid #ccc', 
-              borderRadius: '8px',
-              background: '#000'
-            }}
-          >
-            <ShaderMaterial 
-              fragmentShader={fragmentShader}
-              vertexShader={vertexShader}
-            />
-          </Canvas>
-        </div>
-
-        {/* 代码编辑器 */}
-        {showEditor && isEditing && (
-          <div className="flex-1 min-w-[400px]">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  片段着色器 (Fragment Shader):
-                </label>
-                <textarea
-                  value={fragmentShader}
-                  onChange={(e) => handleShaderUpdate(e.target.value)}
-                  className="w-full h-[300px] font-mono text-xs border border-gray-300 rounded p-3 resize-y"
-                  spellCheck={false}
-                  placeholder="在这里编写你的片段着色器..."
-                />
-              </div>
-              
-              <div className="text-xs text-gray-600 space-y-1">
-                <p><strong>可用的 uniform 变量:</strong></p>
-                <ul className="list-disc list-inside ml-2 space-y-1">
-                  <li><code>u_time</code> - 时间 (float)</li>
-                  <li><code>u_resolution</code> - 分辨率 (vec2)</li>
-                  <li><code>u_mouse</code> - 鼠标位置 (vec2)</li>
-                  <li><code>gl_FragCoord</code> - 片段坐标</li>
-                </ul>
-              </div>
-              
-              <div className="text-xs text-gray-600">
-                <p><strong>💡 提示:</strong></p>
-                <ul className="list-disc list-inside ml-2 space-y-1">
-                  <li>修改代码后会实时更新预览</li>
-                  <li>尝试不同的预设案例学习技巧</li>
-                  <li>可以参考 <a href="https://thebookofshaders.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Book of Shaders</a> 教程</li>
-                </ul>
-              </div>
+    <div className={cn("w-full space-y-6 p-6", className)}>
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Shader Playground
+              </CardTitle>
+              <CardDescription>
+                实时 GLSL Shader 编辑器和可视化工具
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleTheme}
+              >
+                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRunning(!isRunning)}
+              >
+                {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetShaders}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              {showEditor && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(!isEditing)}
+                >
+                  {isEditing ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {isEditing ? '隐藏编辑器' : '显示编辑器'}
+                </Button>
+              )}
             </div>
           </div>
-        )}
-      </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* 预设选择器 */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Code2 className="h-4 w-4" />
+              <span className="text-sm font-medium">预设案例</span>
+            </div>
+            <Select value={selectedPreset} onValueChange={loadPreset}>
+              <SelectTrigger className="w-[240px]">
+                <SelectValue placeholder="选择预设案例" />
+              </SelectTrigger>
+              <SelectContent >
+                {Object.entries(categorizedPresets).map(([category, presets]) => (
+                  <div key={category}>
+                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                      {category}
+                    </div>
+                    {presets.map((preset) => (
+                      <SelectItem key={preset.name} value={preset.name}>
+                        <div className="flex justify-center items-center gap-4">
+                          <div className="font-medium">{shaderPresets[preset.name].name}</div>
+                          {preset.description && (
+                            <div className="text-xs text-muted-foreground">
+                              {preset.description}
+                            </div>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </div>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="@container">
+            <div className="flex flex-col @3xl:flex-row gap-6 @3xl:items-center">
+              {/* 3D 渲染区域 */}
+              <Card className="flex-shrink-0 @3xl:flex-shrink-0">
+                <CardContent className="p-0">
+                  <div
+                    className="relative overflow-hidden rounded-lg border mx-auto @3xl:mx-0"
+                    style={{ 
+                      width: typeof width === 'number' && width > 600 ? Math.min(width, 500) : width, 
+                      height: typeof height === 'number' && height > 400 ? Math.min(height, 400) : height 
+                    }}
+                  >
+                    <Canvas
+                      camera={{ position: [0, 0, 2], fov: 75 }}
+                      className="bg-black"
+                    >
+                      <ShaderMaterial
+                        fragmentShader={fragmentShader}
+                        vertexShader={vertexShader}
+                        isRunning={isRunning}
+                      />
+                    </Canvas>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* 代码编辑器 */}
+              {showEditor && isEditing && (
+                <Card className="flex-1 @3xl:min-w-[500px] w-full">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Code2 className="h-4 w-4" />
+                    Shader 编辑器
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'fragment' | 'vertex')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="fragment">Fragment Shader</TabsTrigger>
+                      <TabsTrigger value="vertex">Vertex Shader</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="fragment" className="mt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Fragment Shader</Badge>
+                          <div className="text-xs text-muted-foreground">
+                            片段着色器 - 控制像素颜色
+                          </div>
+                        </div>
+                        <div className="border rounded-lg overflow-hidden">
+                          <Editor
+                            height="400px"
+                            language="glsl"
+                            value={fragmentShader}
+                            onChange={handleFragmentShaderUpdate}
+                            theme={isDarkMode ? 'vs-dark' : 'light'}
+                            options={{
+                              minimap: { enabled: false },
+                              fontSize: 13,
+                              lineNumbers: 'on',
+                              scrollBeyondLastLine: false,
+                              wordWrap: 'on',
+                              automaticLayout: true,
+                              tabSize: 2,
+                              insertSpaces: true,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="vertex" className="mt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Vertex Shader</Badge>
+                          <div className="text-xs text-muted-foreground">
+                            顶点着色器 - 控制几何体变换
+                          </div>
+                        </div>
+                        <div className="border rounded-lg overflow-hidden">
+                          <Editor
+                            height="400px"
+                            language="glsl"
+                            value={vertexShader}
+                            onChange={handleVertexShaderUpdate}
+                            theme={isDarkMode ? 'vs-dark' : 'light'}
+                            options={{
+                              minimap: { enabled: false },
+                              fontSize: 13,
+                              lineNumbers: 'on',
+                              scrollBeyondLastLine: false,
+                              wordWrap: 'on',
+                              automaticLayout: true,
+                              tabSize: 2,
+                              insertSpaces: true,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* 帮助信息 */}
+                  <Card className="mt-6 bg-muted/50">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-2">
+                        <Info className="h-4 w-4 mt-0.5 text-muted-foreground" />
+                        <div className="space-y-2">
+                          <div className="text-sm font-medium">可用的 Uniform 变量</div>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div><code className="bg-background px-1 py-0.5 rounded">u_time</code> - 时间 (float)</div>
+                            <div><code className="bg-background px-1 py-0.5 rounded">u_resolution</code> - 分辨率 (vec2)</div>
+                            <div><code className="bg-background px-1 py-0.5 rounded">u_mouse</code> - 鼠标位置 (vec2)</div>
+                            <div><code className="bg-background px-1 py-0.5 rounded">gl_FragCoord</code> - 片段坐标</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground pt-2">
+                            <strong>💡 提示:</strong> 修改代码后会实时更新预览，可以参考{' '}
+                            <a
+                              href="https://thebookofshaders.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline"
+                            >
+                              Book of Shaders
+                            </a>{' '}
+                            教程学习更多技巧
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </CardContent>
+              </Card>
+            )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -332,25 +558,44 @@ function ShaderPlayground({
 const RegisteredShaderPlayground = createAutoRegisterComponent({
   id: 'shader-playground',
   name: 'ShaderPlayground',
-  description: '实时 Shader 编辑器和可视化工具，支持 Book of Shaders 案例实践',
+  description: '专业的 GLSL Shader 编辑器，支持 Monaco Editor 和主题切换',
   category: CATEGORIES.THREE_D,
-  template: `:::react{component="ShaderPlayground" width="500" height="400" showEditor="true"}
+  template: `:::react{component="ShaderPlayground" width="500" height="400" showEditor="true" theme="auto"}
 实时 Shader 编程环境
 :::`,
-  tags: ['shader', 'webgl', 'glsl', '3d', 'playground'],
-  version: '1.0.0',
+  tags: ['shader', 'webgl', 'glsl', '3d', 'playground', 'monaco', 'editor'],
+  version: '2.0.0',
   props: {
     width: {
       type: 'number',
-      default: 400
+      default: 400,
+      description: '渲染区域宽度'
     },
     height: {
-      type: 'number', 
-      default: 400
+      type: 'number',
+      default: 400,
+      description: '渲染区域高度'
     },
     showEditor: {
       type: 'boolean',
-      default: true
+      default: true,
+      description: '是否显示代码编辑器'
+    },
+    theme: {
+      type: 'string',
+      default: 'auto',
+      description: '编辑器主题: light, dark, auto',
+      options: ['light', 'dark', 'auto']
+    },
+    initialVertexShader: {
+      type: 'string',
+      default: '',
+      description: '初始顶点着色器代码'
+    },
+    initialFragmentShader: {
+      type: 'string',
+      default: '',
+      description: '初始片段着色器代码'
     }
   }
 })(ShaderPlayground)

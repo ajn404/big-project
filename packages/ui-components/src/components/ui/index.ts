@@ -8,6 +8,7 @@ export * from './input'
 export * from './select'
 export * from './slider'
 export * from './textarea'
+export * from './checkbox'
 
 // Export existing custom components
 export { ExampleCard } from './ExampleCard'

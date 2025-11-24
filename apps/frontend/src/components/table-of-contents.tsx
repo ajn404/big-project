@@ -77,49 +77,50 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
       console.warn(`Element with id "${id}" not found`)
     }
   }
-
   if (tocItems.length === 0) {
     return null
   }
 
   return (
-    <Card className={cn("sticky top-20", className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-sm font-medium">
-          <List className="h-4 w-4 mr-2" />
-          目录
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <nav className="space-y-1">
-          {tocItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => scrollToHeading(item.id)}
-              className={cn(
-                "w-full text-left text-sm transition-colors hover:text-foreground group flex items-center",
-                item.level === 1 && "font-medium",
-                item.level === 2 && "pl-4 text-muted-foreground",
-                item.level === 3 && "pl-8 text-muted-foreground",
-                item.level === 4 && "pl-12 text-muted-foreground",
-                item.level === 5 && "pl-16 text-muted-foreground",
-                item.level === 6 && "pl-20 text-muted-foreground",
-                activeId === item.id
-                  ? "text-primary font-medium"
-                  : "text-muted-foreground"
-              )}
-            >
-              <ChevronRight
+    <div className="hidden lg:block w-80 flex-shrink-0">
+      <Card className={cn("sticky top-20", className)}>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center text-sm font-medium">
+            <List className="h-4 w-4 mr-2" />
+            目录
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <nav className="space-y-1">
+            {tocItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToHeading(item.id)}
                 className={cn(
-                  "h-3 w-3 mr-1 opacity-0 group-hover:opacity-100 transition-opacity",
-                  activeId === item.id && "opacity-100"
+                  "w-full text-left text-sm transition-colors hover:text-foreground group flex items-center",
+                  item.level === 1 && "font-medium",
+                  item.level === 2 && "pl-4 text-muted-foreground",
+                  item.level === 3 && "pl-8 text-muted-foreground",
+                  item.level === 4 && "pl-12 text-muted-foreground",
+                  item.level === 5 && "pl-16 text-muted-foreground",
+                  item.level === 6 && "pl-20 text-muted-foreground",
+                  activeId === item.id
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground"
                 )}
-              />
-              <span className="truncate">{item.title}</span>
-            </button>
-          ))}
-        </nav>
-      </CardContent>
-    </Card>
+              >
+                <ChevronRight
+                  className={cn(
+                    "h-3 w-3 mr-1 opacity-0 group-hover:opacity-100 transition-opacity",
+                    activeId === item.id && "opacity-100"
+                  )}
+                />
+                <span className="truncate">{item.title}</span>
+              </button>
+            ))}
+          </nav>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

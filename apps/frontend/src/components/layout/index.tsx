@@ -25,7 +25,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="flex">
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className={`flex-1 p-6 transition-all duration-200 ${sidebarOpen ? 'lg:pl-80' : 'lg:pl-6'}`}>
-            <div className="mx-auto max-w-7xl">
+            <div className="mx-auto max-w-5xl  md:max-w-7xl lg:max-w-full ">
               {children}
             </div>
           </main>

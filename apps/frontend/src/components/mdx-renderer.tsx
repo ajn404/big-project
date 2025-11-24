@@ -7,27 +7,35 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import 'katex/dist/katex.min.css'
 import remarkToc from 'remark-toc'
-import rehypeSlug from 'rehype-slug'
 import rehypeRaw from 'rehype-raw'
 import { visit } from 'unist-util-visit'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui-components'
 import { Badge } from '@workspace/ui-components'
 import { Button } from '@workspace/ui-components'
 import { Alert, AlertDescription } from '@workspace/ui-components'
-import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Play } from 'lucide-react'
+import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Play, Eye, EyeOff } from 'lucide-react'
 import { ComponentRenderer } from './component-renderer'
 import { generateHeadingId } from '@/lib/heading-utils'
 import { ImageProvider, useImageContext } from '@/contexts/image-context'
 import { ImagePreview } from './image-preview'
+import { useQuery } from '@apollo/client'
+import { GET_ASSETS } from '@/lib/graphql/asset-queries'
 
 interface MDXRendererProps {
   content: string
 }
 
-// MDX图片组件，支持预览
+// MDX图片组件，支持预览和马赛克
 function MDXImage({ src, alt, ...props }: any) {
   const { addImage, openPreview, images } = useImageContext()
   const [isRegistered, setIsRegistered] = React.useState(false)
+  const [showPreview, setShowPreview] = React.useState(false)
+  const [isMosaicDefault, setIsMosaicDefault] = React.useState(false)
+  
+  // 查询资产信息获取马赛克设置
+  const { data: assetsData } = useQuery(GET_ASSETS, {
+    variables: { limit: 1000 }, // 获取所有资产
+  })
   
   // 只在第一次渲染时注册图片，避免重复调用
   React.useEffect(() => {
@@ -37,6 +45,16 @@ function MDXImage({ src, alt, ...props }: any) {
     }
   }, [src, alt, addImage, isRegistered])
   
+  // 检查当前图片是否设置了默认马赛克
+  React.useEffect(() => {
+    if (assetsData?.assets && src) {
+      const asset = assetsData.assets.find((asset: any) => asset.url === src)
+      if (asset) {
+        setIsMosaicDefault(asset.isMosaicDefault || false)
+      }
+    }
+  }, [assetsData, src])
+  
   const handleClick = React.useCallback(() => {
     const index = images.findIndex(img => img.src === src)
     if (index !== -1) {
@@ -44,14 +62,42 @@ function MDXImage({ src, alt, ...props }: any) {
     }
   }, [images, src, openPreview])
   
+  const togglePreview = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowPreview(!showPreview)
+  }, [showPreview])
+  
+  const shouldShowMosaic = isMosaicDefault && !showPreview
+  
   return (
-    <img 
-      src={src} 
-      alt={alt || ''} 
-      className="max-w-full h-auto rounded-lg my-6 shadow-md border border-border cursor-pointer hover:shadow-lg transition-shadow" 
-      onClick={handleClick}
-      {...props} 
-    />
+    <span className="relative inline-block my-6">
+      <img 
+        src={src} 
+        alt={alt || ''} 
+        className={`max-w-full h-auto rounded-lg shadow-md border border-border cursor-pointer hover:shadow-lg transition-all ${
+          shouldShowMosaic ? 'filter blur-lg' : ''
+        }`}
+        onClick={handleClick}
+        {...props} 
+      />
+      {isMosaicDefault && (
+        <button
+          className={`absolute top-2 right-2 opacity-80 hover:opacity-100 px-2 py-1 rounded text-xs transition-colors ${
+            showPreview ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+          }`}
+          onClick={togglePreview}
+        >
+          {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      )}
+      {shouldShowMosaic && (
+        <span className="absolute  pointer-events-none inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-lg">
+          <span className="bg-white bg-opacity-90  pointer-events-none px-3 py-1 rounded text-sm font-medium">
+            点击预览按钮查看图片
+          </span>
+        </span>
+      )}
+    </span>
   )
 }
 

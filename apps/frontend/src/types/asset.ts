@@ -17,6 +17,7 @@ export interface Asset {
   description?: string;
   alt?: string;
   metadata?: Record<string, any>;
+  isMosaicDefault?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +31,7 @@ export interface AssetStats {
 export interface CreateAssetInput {
   description?: string;
   alt?: string;
+  isMosaicDefault?: boolean;
 }
 
 export interface UpdateAssetInput {
@@ -37,4 +39,5 @@ export interface UpdateAssetInput {
   name?: string;
   description?: string;
   alt?: string;
+  isMosaicDefault?: boolean;
 }

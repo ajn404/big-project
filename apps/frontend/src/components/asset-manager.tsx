@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox } from '@workspace/ui-components';
 import {
   Upload,
   Search,
@@ -287,9 +287,16 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, selectionMode
             {asset.name}
           </p>
           <div className="flex items-center justify-between mt-1">
-            <Badge variant="secondary" className="text-xs">
-              {asset.type}
-            </Badge>
+            <div className="flex gap-1">
+              <Badge variant="secondary" className="text-xs">
+                {asset.type}
+              </Badge>
+              {asset.type === AssetType.IMAGE && asset.isMosaicDefault && (
+                <Badge variant="outline" className="text-xs">
+                  马赛克
+                </Badge>
+              )}
+            </div>
             <span className="text-xs text-gray-500">
               {formatFileSize(asset.size)}
             </span>
@@ -316,6 +323,7 @@ function AssetEditDialog({ asset, open, onOpenChange, onSave }: AssetEditDialogP
   const [name, setName] = useState(asset.name);
   const [description, setDescription] = useState(asset.description || '');
   const [alt, setAlt] = useState(asset.alt || '');
+  const [isMosaicDefault, setIsMosaicDefault] = useState(asset.isMosaicDefault || false);
 
   const handleSave = () => {
     onSave({
@@ -323,6 +331,7 @@ function AssetEditDialog({ asset, open, onOpenChange, onSave }: AssetEditDialogP
       name: name !== asset.name ? name : undefined,
       description: description !== (asset.description || '') ? description : undefined,
       alt: alt !== (asset.alt || '') ? alt : undefined,
+      isMosaicDefault: isMosaicDefault !== (asset.isMosaicDefault || false) ? isMosaicDefault : undefined,
     });
   };
 
@@ -351,14 +360,29 @@ function AssetEditDialog({ asset, open, onOpenChange, onSave }: AssetEditDialogP
             />
           </div>
           {asset.type === AssetType.IMAGE && (
-            <div>
-              <label className="text-sm font-medium mb-2 block">Alt 文本</label>
-              <Input
-                value={alt}
-                onChange={(e) => setAlt(e.target.value)}
-                placeholder="图片替代文本"
-              />
-            </div>
+            <>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Alt 文本</label>
+                <Input
+                  value={alt}
+                  onChange={(e) => setAlt(e.target.value)}
+                  placeholder="图片替代文本"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="mosaic-default"
+                  checked={isMosaicDefault}
+                  onCheckedChange={(checked) => setIsMosaicDefault(checked as boolean)}
+                />
+                <label htmlFor="mosaic-default" className="text-sm font-medium">
+                  默认显示马赛克
+                </label>
+                <span className="text-xs text-gray-500">
+                  (在MDX渲染器中非预览状态下显示马赛克)
+                </span>
+              </div>
+            </>
           )}
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

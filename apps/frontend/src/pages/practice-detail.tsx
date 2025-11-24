@@ -33,7 +33,7 @@ export function PracticeDetailPage() {
   return (
     <div className="flex gap-8 justify-center">
       {/* 主内容区域 */}
-      <div className={`flex-1 space-y-8  max-w-4xl `}>
+      <div className={`flex-1 space-y-8  max-w-4xl md:max-w-6xl lg:max-w-full`}>
       {/* Back Button */}
       <Button asChild variant="outline">
         <Link to="/practice">
@@ -151,9 +151,8 @@ export function PracticeDetailPage() {
 
       {/* 右侧目录 - 仅在MDX文章且侧边栏收起时显示 */}
       {showToc && (
-        <div className="hidden lg:block w-80 flex-shrink-0">
           <TableOfContents content={node.content || ''} />
-        </div>
+        
       )}
     </div>
   )

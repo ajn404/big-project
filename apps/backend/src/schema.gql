@@ -7,6 +7,7 @@ type Asset {
   createdAt: DateTime!
   description: String
   id: ID!
+  isMosaicDefault: Boolean
   metadata: JSONObject
   mimeType: String!
   name: String!
@@ -222,6 +223,7 @@ input UpdateAssetInput {
   alt: String
   description: String
   id: ID!
+  isMosaicDefault: Boolean
   name: String
 }
 

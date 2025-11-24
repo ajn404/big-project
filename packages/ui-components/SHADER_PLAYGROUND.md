@@ -1,11 +1,20 @@
-# 🎨 Shader Playground - Book of Shaders 实践组件
+# 🎨 Shader Playground v2.0 - 专业 GLSL 编辑器
 
 ## 📋 组件介绍
 
-ShaderPlayground 是一个专为学习和实践 **Book of Shaders** 而设计的实时 Shader 编辑器和可视化工具。它提供了：
+ShaderPlayground v2.0 是一个专业的 GLSL Shader 编辑器，专为学习和实践 **Book of Shaders** 而设计。全新升级带来了：
 
+### ✨ v2.0 新特性
+- 🔧 **Monaco Editor**：VS Code 级别的代码编辑体验
+- 🌙 **智能主题**：明暗主题切换 + 自动系统检测
+- 📑 **分离编辑**：Fragment 和 Vertex Shader 独立标签页
+- ⏯️ **播放控制**：暂停/播放动画时间轴
+- 🎨 **Shadcn UI**：现代化设计风格
+- 🏷️ **分类预设**：按类别组织的案例库
+
+### 💪 核心功能
 - 🖥️ **实时预览**：所见即所得的 Shader 效果
-- 📝 **代码编辑器**：内置语法高亮的 GLSL 编辑器
+- 📝 **专业编辑**：语法高亮、自动补全、错误检测
 - 🎯 **经典案例**：内置 Book of Shaders 经典案例库
 - ⚡ **即时编译**：代码修改后立即生效
 - 🎪 **丰富预设**：从入门到高级的完整案例集
@@ -23,9 +32,23 @@ function MyPage() {
       width={500}
       height={400}
       showEditor={true}
+      theme="auto" // 自动检测系统主题
     />
   )
 }
+```
+
+### 主题配置
+
+```tsx
+// 明亮主题
+<ShaderPlayground theme="light" />
+
+// 暗黑主题
+<ShaderPlayground theme="dark" />
+
+// 自动检测（默认）
+<ShaderPlayground theme="auto" />
 ```
 
 ### 使用自定义 Shader

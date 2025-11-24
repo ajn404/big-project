@@ -15,6 +15,7 @@ export const GET_ASSETS = gql`
       type
       description
       alt
+      isMosaicDefault
       createdAt
       updatedAt
     }
@@ -34,6 +35,7 @@ export const GET_ASSET = gql`
       description
       alt
       metadata
+      isMosaicDefault
       createdAt
       updatedAt
     }
@@ -47,6 +49,7 @@ export const UPDATE_ASSET = gql`
       name
       description
       alt
+      isMosaicDefault
       updatedAt
     }
   }

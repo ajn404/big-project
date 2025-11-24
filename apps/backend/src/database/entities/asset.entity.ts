@@ -67,6 +67,10 @@ export class Asset {
   @Field(() => GraphQLJSONObject, { nullable: true })
   metadata?: Record<string, any>;
 
+  @Column({ type: 'boolean', default: false })
+  @Field({ nullable: true })
+  isMosaicDefault?: boolean;
+
   @CreateDateColumn()
   @Field()
   createdAt: Date;

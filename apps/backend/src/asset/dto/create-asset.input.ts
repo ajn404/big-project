@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, IsBoolean } from 'class-validator';
 
 @InputType()
 export class CreateAssetInput {
@@ -14,4 +14,9 @@ export class CreateAssetInput {
   @IsString()
   @MaxLength(255)
   alt?: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsBoolean()
+  isMosaicDefault?: boolean;
 }
