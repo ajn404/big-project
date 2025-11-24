@@ -321,7 +321,7 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
   }, [state])
 
   return (
-    <div className={`p-6 bg-white rounded-lg border ${className}`}>
+    <div className={`p-6 bg-white rounded-lg border ${className} m-auto max-w-4xl md:max-w-6xl lg:max-w-7xl overflow-auto` }>
       <h3 className="text-2xl font-bold mb-4 text-gray-800">
         LeetCode 3679: 使库存平衡的最少丢弃次数
       </h3>

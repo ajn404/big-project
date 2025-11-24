@@ -2,7 +2,7 @@ import { useRef, useMemo, useState, useCallback, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
-import { Editor } from '@monaco-editor/react'
+import { Editor, loader } from '@monaco-editor/react'
 import { Button } from '../ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
@@ -21,6 +21,13 @@ import {
   Moon,
   Sun
 } from 'lucide-react'
+
+// 配置 Monaco Editor 使用本地静态资源
+loader.config({
+  paths: {
+    vs: '/monaco/vs'
+  }
+})
 
 interface ShaderPlaygroundProps {
   width?: number

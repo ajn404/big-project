@@ -17,6 +17,8 @@
     "@apollo/client": "^3.8.7",
     "@learning-practice/shared-types": "workspace:*",
     "@mdx-js/rollup": "^3.0.0",
+    "@monaco-editor/react": "^4.7.0",
+    "monaco-editor": "^0.44.0",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slider": "^1.1.2",

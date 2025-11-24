@@ -3,6 +3,50 @@ import react from '@vitejs/plugin-react'
 import mdx from '@mdx-js/rollup'
 import path from 'path'
 import { analyzer } from 'vite-bundle-analyzer'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
+
+// Monaco Editor 静态资源拷贝插件
+function monacoEditorPlugin() {
+  return {
+    name: 'monaco-editor-plugin',
+    writeBundle() {
+      // 在构建完成后拷贝Monaco Editor静态资源
+      const monacoEditorPath = path.resolve(__dirname, '../../node_modules/.pnpm/monaco-editor@0.44.0/node_modules/monaco-editor/min/vs')
+      const outputPath = path.resolve(__dirname, 'dist/monaco/vs')
+      
+      if (fs.existsSync(monacoEditorPath)) {
+        fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+        fs.cpSync(monacoEditorPath, outputPath, { recursive: true })
+        console.log('✅ Monaco Editor 静态资源已拷贝到:', outputPath)
+      } else {
+        console.warn('⚠️  Monaco Editor 静态资源源目录不存在:', monacoEditorPath)
+      }
+    },
+    configureServer(server) {
+      // 开发时提供Monaco Editor静态资源服务
+      const monacoEditorPath = path.resolve(__dirname, '../../node_modules/.pnpm/monaco-editor@0.44.0/node_modules/monaco-editor/min/vs')
+      
+      server.middlewares.use('/monaco/vs', (req, res, next) => {
+        const filePath = path.join(monacoEditorPath, req.url || '')
+        
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          const ext = path.extname(filePath)
+          const contentType = ext === '.js' ? 'application/javascript' :
+                            ext === '.css' ? 'text/css' :
+                            ext === '.json' ? 'application/json' :
+                            'application/octet-stream'
+          
+          res.setHeader('Content-Type', contentType)
+          res.setHeader('Access-Control-Allow-Origin', '*')
+          fs.createReadStream(filePath).pipe(res)
+        } else {
+          next()
+        }
+      })
+    }
+  }
+}
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -10,6 +54,7 @@ export default defineConfig(({ mode }) => ({
     mdx({
       providerImportSource: '@mdx-js/react'
     }),
+    monacoEditorPlugin(),
     // 在analyze模式下启用bundle分析器
     mode === 'analyze' && analyzer({
       analyzerMode: 'server',
