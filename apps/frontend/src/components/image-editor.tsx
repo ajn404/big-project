@@ -51,7 +51,7 @@ export function ImageEditor({ imageUrl, open, onOpenChange, onSave }: ImageEdito
   const [history, setHistory] = useState<EditState[]>([defaultState]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [cropMode, setCropMode] = useState(false);
+  const [, setCropMode] = useState(false);
 
   // 重置状态
   const resetState = useCallback(() => {

@@ -1,5 +1,4 @@
 // InfiniteGradientCarousel.tsx
-import React from "react";
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 
 type Props = {

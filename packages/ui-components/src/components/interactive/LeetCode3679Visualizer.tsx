@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 import { Button } from '../ui/button'

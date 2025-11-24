@@ -244,24 +244,22 @@ export function PracticeManagePage() {
       </Card>
 
       {/* Create/Edit Form Dialog */}
-      {showCreateForm && (
-        <PracticeNodeForm
-          node={editingNode}
-          categories={categoriesData?.categories || []}
-          tags={tagsData?.tags || []}
-          onClose={handleFormClose}
-        />
-      )}
+      <PracticeNodeForm
+        open={showCreateForm}
+        node={editingNode}
+        categories={categoriesData?.categories || []}
+        tags={tagsData?.tags || []}
+        onClose={handleFormClose}
+      />
 
       {/* Import Dialog */}
-      {showImportDialog && (
-        <MarkdownImportDialog
-          categories={categoriesData?.categories || []}
-          tags={tagsData?.tags || []}
-          onClose={() => setShowImportDialog(false)}
-          onImportComplete={handleImportComplete}
-        />
-      )}
+      <MarkdownImportDialog
+        open={showImportDialog}
+        categories={categoriesData?.categories || []}
+        tags={tagsData?.tags || []}
+        onClose={() => setShowImportDialog(false)}
+        onImportComplete={handleImportComplete}
+      />
     </div>
   )
 }

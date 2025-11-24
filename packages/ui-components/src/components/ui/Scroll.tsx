@@ -1,4 +1,3 @@
-import React from 'react'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 
 interface ScrollComponentProps {
@@ -6,7 +5,7 @@ interface ScrollComponentProps {
     // Add other props here
 }
 
-function ScrollComponent({ children, ...props }: ScrollComponentProps) {
+function ScrollComponent({ children }: ScrollComponentProps) {
     return (
         <div className="p-4 border rounded">
       // Component content

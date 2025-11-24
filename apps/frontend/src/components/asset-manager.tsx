@@ -257,7 +257,7 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, selectionMode
             <img
               src={asset.url}
               alt={asset.alt || asset.name}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${asset.isMosaicDefault&&'blur-md'}`}
               loading="lazy"
             />
           ) : (
@@ -291,11 +291,11 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, selectionMode
               <Badge variant="secondary" className="text-xs">
                 {asset.type}
               </Badge>
-              {asset.type === AssetType.IMAGE && asset.isMosaicDefault && (
+              {/* {asset.type === AssetType.IMAGE && asset.isMosaicDefault && (
                 <Badge variant="outline" className="text-xs">
                   马赛克
                 </Badge>
-              )}
+              )} */}
             </div>
             <span className="text-xs text-gray-500">
               {formatFileSize(asset.size)}

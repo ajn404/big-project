@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 
 interface InteractiveDemoProps {

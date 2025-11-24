@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
-import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components'
 import { Button } from '@workspace/ui-components'
 import { Input } from '@workspace/ui-components'
 import { Badge } from '@workspace/ui-components'
 import { Textarea } from '@workspace/ui-components'
-import { X, Upload, FileText, Download } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components'
+import { Upload, FileText, Download } from 'lucide-react'
 
 interface Category {
   id: string
@@ -23,6 +23,7 @@ interface Tag {
 interface MarkdownImportDialogProps {
   categories: Category[]
   tags: Tag[]
+  open: boolean
   onClose: () => void
   onImportComplete: () => void
 }
@@ -50,7 +51,7 @@ interface FrontmatterData {
   requires?: string[]
 }
 
-export function MarkdownImportDialog({ categories, onClose, onImportComplete }: MarkdownImportDialogProps) {
+export function MarkdownImportDialog({ categories, open, onClose, onImportComplete }: MarkdownImportDialogProps) {
   const [importMethod, setImportMethod] = useState<'file' | 'url' | 'text'>('file')
   const [markdownContent, setMarkdownContent] = useState('')
   const [url, setUrl] = useState('')
@@ -221,15 +222,12 @@ export function MarkdownImportDialog({ categories, onClose, onImportComplete }: 
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>导入 Markdown 文章</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-auto p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>导入 Markdown 文章</DialogTitle>
+        </DialogHeader>
+        <div className="p-6 pt-0 space-y-6">
           {/* Import Method Selection */}
           <div>
             <label className="block text-sm font-medium mb-2">导入方式</label>
@@ -449,8 +447,8 @@ prerequisites: ["前置要求1", "前置要求2"]
               </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

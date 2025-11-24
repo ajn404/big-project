@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useMutation } from '@apollo/client'
 import { CREATE_PRACTICE_NODE, UPDATE_PRACTICE_NODE } from '@/lib/graphql/mutations'
-import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components'
 import { Button } from '@workspace/ui-components'
 import { Input } from '@workspace/ui-components'
 import { Badge } from '@workspace/ui-components'
-import { X, Save } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components'
+import { Save, X } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
 import { Textarea } from '@workspace/ui-components'
 
@@ -38,6 +38,7 @@ interface PracticeNodeFormProps {
   node?: PracticeNode
   categories: Category[]
   tags: Tag[]
+  open: boolean
   onClose: () => void
 }
 
@@ -52,7 +53,7 @@ const CONTENT_TYPE_OPTIONS = [
   { value: 'COMPONENT', label: 'React 组件' },
 ]
 
-export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNodeFormProps) {
+export function PracticeNodeForm({ node, categories, tags, open, onClose }: PracticeNodeFormProps) {
   const isEditing = !!node
 
   // Form state
@@ -72,6 +73,65 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
   const [newPrerequisite, setNewPrerequisite] = useState('')
   const [availableTags] = useState(tags.map(tag => tag.name))
   const [tagInput, setTagInput] = useState('')
+
+  // 当node变化时更新表单数据（用于编辑模式）
+  useEffect(() => {
+    if (node) {
+      setFormData({
+        title: node.title || '',
+        description: node.description || '',
+        content: node.content || '',
+        contentType: node.contentType || 'MDX',
+        componentName: node.componentName || '',
+        categoryName: node.category?.name || '',
+        tagNames: node.tags?.map((t: any) => t.name) || [],
+        difficulty: node.difficulty || 'BEGINNER',
+        estimatedTime: node.estimatedTime || 30,
+        prerequisites: node.prerequisites || [],
+      })
+    } else {
+      // 重置为新建模式的默认值
+      setFormData({
+        title: '',
+        description: '',
+        content: '',
+        contentType: 'MDX',
+        componentName: '',
+        categoryName: '',
+        tagNames: [],
+        difficulty: 'BEGINNER',
+        estimatedTime: 30,
+        prerequisites: [],
+      })
+    }
+    // 重置其他状态
+    setNewPrerequisite('')
+    setTagInput('')
+  }, [node])
+
+  // 当弹窗关闭时重置状态
+  useEffect(() => {
+    if (!open) {
+      // 延迟重置，避免关闭动画时看到状态变化
+      const timer = setTimeout(() => {
+        setFormData({
+          title: '',
+          description: '',
+          content: '',
+          contentType: 'MDX',
+          componentName: '',
+          categoryName: '',
+          tagNames: [],
+          difficulty: 'BEGINNER',
+          estimatedTime: 30,
+          prerequisites: [],
+        })
+        setNewPrerequisite('')
+        setTagInput('')
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
 
   const [createPracticeNode, { loading: createLoading }] = useMutation(CREATE_PRACTICE_NODE, {
     onCompleted: () => onClose(),
@@ -158,17 +218,12 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-[80vw] max-h-[95vh] overflow-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>{isEditing ? '编辑文章' : '创建新文章'}</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="w-full max-w-full max-h-full overflow-auto p-0">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle>{isEditing ? '编辑文章' : '创建新文章'}</DialogTitle>
+        </DialogHeader>
+        <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column - Form Fields */}
@@ -381,8 +436,8 @@ export function PracticeNodeForm({ node, categories, tags, onClose }: PracticeNo
               </Button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
