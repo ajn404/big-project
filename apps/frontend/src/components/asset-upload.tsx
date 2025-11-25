@@ -168,7 +168,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10, defaultFol
         <Card>
           <CardContent className="p-4">
             <h3 className="font-medium mb-3">已选择的文件 ({files.length})</h3>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+            <div className="space-y-2 max-h-40 max-w-full overflow-y-auto">
               {files.map((file, index) => (
                 <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                   <div className="flex items-center gap-2">

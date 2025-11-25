@@ -213,7 +213,7 @@ export function AssetManager({
               上传资源
             </Button>
           </DialogTrigger>
-          <DialogContent>
+            <DialogContent className="max-w-6xl max-h-[80vh] ">
             <DialogHeader>
               <DialogTitle>上传资源</DialogTitle>
             </DialogHeader>
@@ -222,7 +222,7 @@ export function AssetManager({
                 setShowUpload(false);
                 refetch();
                 // 强制刷新页面来更新文件夹计数
-                window.location.reload();
+                // window.location.reload();
               }}
               allowedTypes={allowedTypes}
               defaultFolderId={currentFolderId}
