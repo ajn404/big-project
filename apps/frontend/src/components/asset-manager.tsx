@@ -14,15 +14,21 @@ import {
   File
 } from 'lucide-react';
 import { GET_ASSETS, REMOVE_ASSET, UPDATE_ASSET } from '@/lib/graphql/asset-queries';
+import { MOVE_ASSET_TO_FOLDER, MOVE_ASSETS_TO_FOLDER } from '@/lib/graphql/folder-queries';
 import { Asset, AssetType, UpdateAssetInput } from '@/types/asset';
+import { Folder } from '@/types/folder';
 import { AssetUpload } from './asset-upload';
 import { ImagePreview } from './image-preview';
+import { FolderManager } from './folder-manager';
 import { useDebounce } from 'use-debounce';
 
 interface AssetManagerProps {
   onSelect?: (asset: Asset) => void;
   selectionMode?: boolean;
   allowedTypes?: AssetType[];
+  currentFolderId?: string;
+  onFolderChange?: (folderId: string | undefined) => void;
+  onMoveAsset?: (assetId: string, folderId?: string) => void;
 }
 
 const getAssetIcon = (type: AssetType) => {
@@ -43,7 +49,14 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: AssetManagerProps) {
+export function AssetManager({ 
+  onSelect, 
+  selectionMode = false, 
+  allowedTypes,
+  currentFolderId,
+  onFolderChange,
+  onMoveAsset
+}: AssetManagerProps) {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<AssetType | undefined>();
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
@@ -59,6 +72,7 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
     variables: {
       search: debouncedSearch || undefined,
       type: typeFilter,
+      folderId: currentFolderId,
       limit: 50,
     },
   });
@@ -72,6 +86,14 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
       setEditingAsset(null);
       refetch();
     },
+  });
+
+  const [moveAssetToFolder] = useMutation(MOVE_ASSET_TO_FOLDER, {
+    onCompleted: () => refetch(),
+  });
+
+  const [moveAssetsToFolder] = useMutation(MOVE_ASSETS_TO_FOLDER, {
+    onCompleted: () => refetch(),
   });
 
   const handleDelete = useCallback(async (id: string) => {
@@ -128,10 +150,34 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
     setCurrentImageIndex((prev) => (prev < previewImages.length - 1 ? prev + 1 : 0));
   }, [previewImages.length]);
 
+  const handleFolderSelect = (folder: Folder | null) => {
+    onFolderChange?.(folder?.id);
+  };
+
+  const handleMoveAsset = async (assetId: string, targetFolderId?: string) => {
+    await moveAssetToFolder({
+      variables: {
+        input: { assetId, folderId: targetFolderId },
+      },
+    });
+  };
+
   return (
-    <div className="space-y-4">
-      {/* 工具栏 */}
-      <div className="flex flex-wrap gap-4 items-center">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      {/* 文件夹侧边栏 */}
+      <div className="lg:col-span-1">
+        <FolderManager
+          currentFolderId={currentFolderId}
+          onFolderSelect={handleFolderSelect}
+          onCreateFolder={() => refetch()}
+          onMoveAsset={onMoveAsset}
+        />
+      </div>
+
+      {/* 主要内容区域 */}
+      <div className="lg:col-span-3 space-y-4">
+        {/* 工具栏 */}
+        <div className="flex flex-wrap gap-4 items-center">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -175,15 +221,18 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
               onSuccess={() => {
                 setShowUpload(false);
                 refetch();
+                // 强制刷新页面来更新文件夹计数
+                window.location.reload();
               }}
               allowedTypes={allowedTypes}
+              defaultFolderId={currentFolderId}
             />
           </DialogContent>
         </Dialog>
-      </div>
+        </div>
 
-      {/* 资源网格 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        {/* 资源网格 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {loading ? (
           Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -207,13 +256,14 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
               onEdit={() => handleEdit(asset)}
               onDelete={() => handleDelete(asset.id)}
               onPreview={() => handlePreview(asset)}
+              onMoveToFolder={(folderId) => handleMoveAsset(asset.id, folderId)}
               selectionMode={selectionMode}
             />
           ))
         )}
-      </div>
+        </div>
 
-      {/* 编辑对话框 */}
+        {/* 编辑对话框 */}
       {editingAsset && (
         <AssetEditDialog
           asset={editingAsset}
@@ -232,6 +282,7 @@ export function AssetManager({ onSelect, selectionMode = false, allowedTypes }: 
         onPrevious={handlePreviousImage}
         onNext={handleNextImage}
       />
+      </div>
     </div>
   );
 }
@@ -242,15 +293,33 @@ interface AssetCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onPreview: () => void;
+  onMoveToFolder: (folderId?: string) => void;
   selectionMode: boolean;
 }
 
-function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, selectionMode }: AssetCardProps) {
+function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, onMoveToFolder, selectionMode }: AssetCardProps) {
   const IconComponent = getAssetIcon(asset.type);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('text/plain', asset.id);
+    setIsDragging(true);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
 
   return (
-    <Card className={`group overflow-hidden transition-all hover:shadow-md ${selectionMode ? 'cursor-pointer  hover:ring-2 hover:ring-blue-500' : ''
-      }`} onClick={onSelect}>
+    <Card 
+      className={`group overflow-hidden transition-all hover:shadow-md ${
+        selectionMode ? 'cursor-pointer hover:ring-2 hover:ring-blue-500' : ''
+      } ${isDragging ? 'opacity-50' : ''}`} 
+      onClick={onSelect}
+      draggable={!selectionMode}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <CardContent className="p-0">
         <div className="aspect-square relative bg-gray-50 flex items-center justify-center">
           {asset.type === AssetType.IMAGE ? (

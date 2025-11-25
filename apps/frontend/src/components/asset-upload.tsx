@@ -8,9 +8,10 @@ interface AssetUploadProps {
   onSuccess?: (asset: any) => void;
   allowedTypes?: AssetType[];
   maxFiles?: number;
+  defaultFolderId?: string;
 }
 
-export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUploadProps) {
+export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10, defaultFolderId }: AssetUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [description, setDescription] = useState('');
@@ -22,6 +23,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUpl
     formData.append('file', file);
     if (input.description) formData.append('description', input.description);
     if (input.alt) formData.append('alt', input.alt);
+    if (input.folderId) formData.append('folderId', input.folderId);
 
     const response = await fetch('/api/assets/upload', {
       method: 'POST',
@@ -79,6 +81,7 @@ export function AssetUpload({ onSuccess, allowedTypes, maxFiles = 10 }: AssetUpl
         const input: CreateAssetInput = {
           description: description || undefined,
           alt: (file.type.startsWith('image/') && alt) ? alt : undefined,
+          folderId: defaultFolderId || undefined,
         };
 
         const result = await uploadAssetREST(file, input);

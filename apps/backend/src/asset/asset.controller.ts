@@ -39,12 +39,14 @@ export class AssetController {
   async getAssets(
     @Query('type') type?: AssetType,
     @Query('search') search?: string,
+    @Query('folderId') folderId?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
     return this.assetService.findAll(
       type,
       search,
+      folderId,
       limit ? parseInt(limit) : undefined,
       offset ? parseInt(offset) : undefined,
     );

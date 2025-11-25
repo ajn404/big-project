@@ -29,4 +29,9 @@ export class UpdateAssetInput {
   @IsOptional()
   @IsBoolean()
   isMosaicDefault?: boolean;
+
+  @Field(() => ID, { nullable: true })
+  @IsOptional()
+  @IsString()
+  folderId?: string;
 }

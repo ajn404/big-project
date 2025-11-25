@@ -4,8 +4,8 @@ import { gql } from '@apollo/client';
 // export const UPLOAD_ASSET = gql`...`
 
 export const GET_ASSETS = gql`
-  query GetAssets($type: AssetType, $search: String, $limit: Int, $offset: Int) {
-    assets(type: $type, search: $search, limit: $limit, offset: $offset) {
+  query GetAssets($type: AssetType, $search: String, $folderId: ID, $limit: Int, $offset: Int) {
+    assets(type: $type, search: $search, folderId: $folderId, limit: $limit, offset: $offset) {
       id
       name
       originalName
@@ -16,6 +16,7 @@ export const GET_ASSETS = gql`
       description
       alt
       isMosaicDefault
+      folderId
       createdAt
       updatedAt
     }

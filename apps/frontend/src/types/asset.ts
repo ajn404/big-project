@@ -18,6 +18,7 @@ export interface Asset {
   alt?: string;
   metadata?: Record<string, any>;
   isMosaicDefault?: boolean;
+  folderId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,4 +41,5 @@ export interface UpdateAssetInput {
   description?: string;
   alt?: string;
   isMosaicDefault?: boolean;
+  folderId?: string;
 }

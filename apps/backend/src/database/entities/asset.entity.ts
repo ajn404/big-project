@@ -4,6 +4,8 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-type-json';
@@ -70,6 +72,14 @@ export class Asset {
   @Column({ type: 'boolean', default: false })
   @Field({ nullable: true })
   isMosaicDefault?: boolean;
+
+  @Column({ nullable: true })
+  @Field(() => ID, { nullable: true })
+  folderId?: string;
+
+  @ManyToOne('Folder', { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'folderId' })
+  folder?: any;
 
   @CreateDateColumn()
   @Field()

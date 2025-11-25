@@ -77,6 +77,7 @@ export class AssetService {
       type: detectedType,
       description: input.description,
       alt: input.alt,
+      folderId: input.folderId,
       metadata: {
         fileName,
         originalName: fixedOriginalName,
@@ -92,6 +93,7 @@ export class AssetService {
   async findAll(
     type?: AssetType,
     search?: string,
+    folderId?: string,
     limit = 20,
     offset = 0,
   ): Promise<Asset[]> {
@@ -106,6 +108,14 @@ export class AssetService {
         '(asset.name ILIKE :search OR asset.description ILIKE :search OR asset.alt ILIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (folderId !== undefined) {
+      if (folderId === null || folderId === '') {
+        query.andWhere('asset.folderId IS NULL');
+      } else {
+        query.andWhere('asset.folderId = :folderId', { folderId });
+      }
     }
 
     query

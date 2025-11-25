@@ -15,10 +15,11 @@ export class AssetResolver {
   findAll(
     @Args('type', { type: () => AssetType, nullable: true }) type?: AssetType,
     @Args('search', { nullable: true }) search?: string,
+    @Args('folderId', { type: () => ID, nullable: true }) folderId?: string,
     @Args('limit', { type: () => Int, defaultValue: 20 }) limit?: number,
     @Args('offset', { type: () => Int, defaultValue: 0 }) offset?: number,
   ): Promise<Asset[]> {
-    return this.assetService.findAll(type, search, limit, offset);
+    return this.assetService.findAll(type, search, folderId, limit, offset);
   }
 
   @Query(() => Asset, { name: 'asset' })

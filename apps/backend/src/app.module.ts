@@ -11,6 +11,7 @@ import { CategoryModule } from './category/category.module';
 import { TagModule } from './tag/tag.module';
 import { UIComponentModule } from './ui-component/ui-component.module';
 import { AssetModule } from './asset/asset.module';
+import { FolderModule } from './folder/folder.module';
 import { SeedModule } from './database/seeds/seed.module';
 
 @Module({
@@ -43,6 +44,7 @@ import { SeedModule } from './database/seeds/seed.module';
     TagModule,
     UIComponentModule,
     AssetModule,
+    FolderModule,
     
     // 种子数据模块
     SeedModule,

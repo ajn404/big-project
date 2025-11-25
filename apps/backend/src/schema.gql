@@ -6,6 +6,7 @@ type Asset {
   alt: String
   createdAt: DateTime!
   description: String
+  folderId: ID
   id: ID!
   isMosaicDefault: Boolean
   metadata: JSONObject
@@ -91,6 +92,13 @@ enum ContentType {
   MDX
 }
 
+input CreateFolderInput {
+  color: String
+  description: String
+  name: String!
+  parentId: ID
+}
+
 input CreatePracticeNodeInput {
   categoryName: String!
   componentName: String
@@ -132,18 +140,45 @@ enum Difficulty {
   INTERMEDIATE
 }
 
+type Folder {
+  children: [Folder!]!
+  color: String!
+  createdAt: DateTime!
+  description: String
+  id: ID!
+  name: String!
+  parent: Folder
+  parentId: ID
+  updatedAt: DateTime!
+}
+
 """
 The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSONObject
 
+input MoveAssetToFolderInput {
+  assetId: ID!
+  folderId: ID
+}
+
+input MoveMassiveInput {
+  assetIds: [ID!]!
+  folderId: ID
+}
+
 type Mutation {
+  createFolder(input: CreateFolderInput!): Folder!
   createPracticeNode(createPracticeNodeInput: CreatePracticeNodeInput!): PracticeNode!
   createUIComponent(createUIComponentInput: CreateUIComponentInput!): UIComponent!
+  moveAssetToFolder(input: MoveAssetToFolderInput!): Asset!
+  moveAssetsToFolder(input: MoveMassiveInput!): [Asset!]!
   removeAsset(id: ID!): Boolean!
+  removeFolder(id: ID!): Boolean!
   removePracticeNode(id: ID!): Boolean!
   removeUIComponent(id: ID!): Boolean!
   updateAsset(input: UpdateAssetInput!): Asset!
+  updateFolder(input: UpdateFolderInput!): Folder!
   updatePracticeNode(updatePracticeNodeInput: UpdatePracticeNodeInput!): PracticeNode!
   updateUIComponent(updateUIComponentInput: UpdateUIComponentInput!): UIComponent!
 }
@@ -168,12 +203,15 @@ type PracticeNode {
 type Query {
   asset(id: ID!): Asset!
   assetStats: AssetStatsType!
-  assets(limit: Int! = 20, offset: Int! = 0, search: String, type: AssetType): [Asset!]!
+  assets(folderId: ID, limit: Int! = 20, offset: Int! = 0, search: String, type: AssetType): [Asset!]!
   categories: [Category!]!
   category(id: ID!): Category!
   componentCategories: [ComponentCategory!]!
   componentStats: ComponentStats!
   componentStatuses: [ComponentStatus!]!
+  folder(id: ID!): Folder!
+  folders(parentId: ID): [Folder!]!
+  getFolderPath(folderId: ID!): [Folder!]!
   practiceNode(id: ID!): PracticeNode!
   practiceNodes: [PracticeNode!]!
   practiceNodesByCategory(categoryName: String!): [PracticeNode!]!
@@ -222,9 +260,18 @@ type UIComponent {
 input UpdateAssetInput {
   alt: String
   description: String
+  folderId: ID
   id: ID!
   isMosaicDefault: Boolean
   name: String
+}
+
+input UpdateFolderInput {
+  color: String
+  description: String
+  id: ID!
+  name: String
+  parentId: ID
 }
 
 input UpdatePracticeNodeInput {

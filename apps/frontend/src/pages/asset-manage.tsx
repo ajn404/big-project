@@ -1,12 +1,41 @@
 import { AssetManager } from '@/components/asset-manager';
-import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-components';
-import { useQuery } from '@apollo/client';
+import { Card, CardContent, CardHeader, CardTitle, Button } from '@workspace/ui-components';
+import { useQuery, useMutation } from '@apollo/client';
 import { GET_ASSET_STATS } from '@/lib/graphql/asset-queries';
+import { GET_FOLDER_PATH, MOVE_ASSET_TO_FOLDER } from '@/lib/graphql/folder-queries';
 import { AssetStats } from '@/types/asset';
+import { useState } from 'react';
+import { ChevronRight, Home } from 'lucide-react';
 
 export default function AssetManagePage() {
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
+  
   const { data: statsData } = useQuery(GET_ASSET_STATS);
   const stats: AssetStats | undefined = statsData?.assetStats;
+
+  const { data: folderPathData } = useQuery(GET_FOLDER_PATH, {
+    variables: { folderId: currentFolderId },
+    skip: !currentFolderId,
+  });
+  const folderPath = folderPathData?.getFolderPath || [];
+
+  const [moveAssetToFolder] = useMutation(MOVE_ASSET_TO_FOLDER, {
+    refetchQueries: ['GetAssets', 'GetFolders', 'GetFolderAssetCount'],
+    awaitRefetchQueries: true,
+  });
+
+  const handleMoveAsset = async (assetId: string, folderId?: string) => {
+    try {
+      await moveAssetToFolder({
+        variables: {
+          input: { assetId, folderId },
+        },
+      });
+    } catch (error) {
+      console.error('移动资产失败:', error);
+      alert('移动资产失败，请重试');
+    }
+  };
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -72,13 +101,48 @@ export default function AssetManagePage() {
         </div>
       )}
 
+      {/* 面包屑导航 */}
+      {folderPath.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <nav className="flex items-center space-x-2 text-sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentFolderId(undefined)}
+                className="p-1 h-auto"
+              >
+                <Home className="w-4 h-4" />
+              </Button>
+              {folderPath.map((folder: any) => (
+                <div key={folder.id} className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentFolderId(folder.id)}
+                    className="p-1 h-auto text-gray-600 hover:text-gray-900"
+                  >
+                    {folder.name}
+                  </Button>
+                </div>
+              ))}
+            </nav>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 资源管理器 */}
       <Card>
         <CardHeader>
           <CardTitle>文件库</CardTitle>
         </CardHeader>
         <CardContent>
-          <AssetManager />
+          <AssetManager 
+            currentFolderId={currentFolderId}
+            onFolderChange={setCurrentFolderId}
+            onMoveAsset={handleMoveAsset}
+          />
         </CardContent>
       </Card>
     </div>
