@@ -6,6 +6,7 @@ type Asset {
   alt: String
   createdAt: DateTime!
   description: String
+  folder: Folder
   folderId: ID
   id: ID!
   isMosaicDefault: Boolean

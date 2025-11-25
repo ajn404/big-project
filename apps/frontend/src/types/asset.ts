@@ -33,6 +33,7 @@ export interface CreateAssetInput {
   description?: string;
   alt?: string;
   isMosaicDefault?: boolean;
+  folderId?:string
 }
 
 export interface UpdateAssetInput {

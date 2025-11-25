@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { ObjectType, Field, ID, registerEnumType } from '@nestjs/graphql';
 import { GraphQLJSONObject } from 'graphql-type-json';
+import { Folder } from './folder.entity'; // Import Folder entity
 
 export enum AssetType {
   IMAGE = 'image',
@@ -77,9 +78,10 @@ export class Asset {
   @Field(() => ID, { nullable: true })
   folderId?: string;
 
-  @ManyToOne('Folder', { nullable: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => Folder, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'folderId' })
-  folder?: any;
+  @Field(() => Folder, { nullable: true }) // Expose folder in GraphQL schema
+  folder?: Folder;
 
   @CreateDateColumn()
   @Field()

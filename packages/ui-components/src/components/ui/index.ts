@@ -9,6 +9,7 @@ export * from './select'
 export * from './slider'
 export * from './textarea'
 export * from './checkbox'
+export * from './context-menu'
 
 // Export existing custom components
 export { ExampleCard } from './ExampleCard'
