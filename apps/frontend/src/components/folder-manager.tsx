@@ -111,8 +111,8 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <FolderIcon className="w-5 h-5" />
+        <h3 className="text-lg font-semibold flex items-center">
+          <FolderIcon className="w-5 h-5 " />
           文件夹
         </h3>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -145,7 +145,7 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
       )}
 
       {/* 文件夹列表 */}
-      <div className="space-y-2">
+      <div className="space-y-2 h-[calc(100vh-500px)] overflow-auto">
         {loading ? (
           <div>加载中...</div>
         ) : folders.length === 0 ? (

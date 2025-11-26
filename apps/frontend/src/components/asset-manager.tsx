@@ -72,7 +72,7 @@ export function AssetManager({
     variables: {
       search: debouncedSearch || undefined,
       type: typeFilter,
-      folderId: currentFolderId,
+      folderId: currentFolderId, // 只查询当前文件夹的资源，不包含子文件夹
       limit: 50,
     },
   });
@@ -120,9 +120,20 @@ export function AssetManager({
     await updateAsset({ variables: { input } });
   }, [updateAsset]);
 
-  const filteredAssets = data?.assets?.filter((asset: Asset) =>
-    !allowedTypes || allowedTypes.includes(asset.type)
-  ) || [];
+  const filteredAssets = data?.assets?.filter((asset: Asset) => {
+    const matchesType = !allowedTypes || allowedTypes.includes(asset.type);
+
+    let matchesFolder = false;
+    if (currentFolderId) {
+      // If a specific folder is selected, asset's folderId must match it
+      matchesFolder = asset.folderId === currentFolderId;
+    } else {
+      // If no folder is selected (root view), asset's folderId must be null or undefined
+      matchesFolder = !asset.folderId;
+    }
+
+    return matchesType && matchesFolder;
+  }) || [];
 
 
   const handlePreview = useCallback((asset: Asset) => {
@@ -174,9 +185,9 @@ export function AssetManager({
 
   return (
     <>
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div className="h-[calc(100vh-500px)] grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* 文件夹侧边栏 */}
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 sticky top-0 ">
         <FolderManager
           currentFolderId={currentFolderId}
           onFolderSelect={handleFolderSelect}
@@ -186,9 +197,9 @@ export function AssetManager({
       </div>
 
       {/* 主要内容区域 */}
-      <div className="lg:col-span-3 space-y-4">
-        {/* 工具栏 */}
-        <div className="flex flex-wrap gap-4 items-center">
+      <div className="lg:col-span-3 flex flex-col h-full overflow-hidden">
+        {/* 工具栏 - 固定在顶部 */}
+        <div className="flex-shrink-0 flex flex-wrap gap-4 items-center p-4 border-b sticky top-0 z-10">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -242,8 +253,9 @@ export function AssetManager({
         </Dialog>
         </div>
 
-        {/* 资源网格 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* 资源网格 - 可滚动区域 */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {loading ? (
           Array.from({ length: 12 }).map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -272,6 +284,7 @@ export function AssetManager({
             />
           ))
         )}
+          </div>
         </div>
 
         {/* 编辑对话框 */}
