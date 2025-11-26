@@ -11,6 +11,7 @@ import {
   Card,
   CardContent,
   Textarea,
+  useConfirm,
 } from '@workspace/ui-components';
 import {
   FolderPlus,
@@ -50,6 +51,7 @@ const FOLDER_COLORS = [
 export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder, onMoveAsset }: FolderManagerProps) {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   const { data, loading, refetch } = useQuery(GET_FOLDERS, {
     variables: { parentId: currentFolderId },
@@ -87,14 +89,22 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
   }, [updateFolder]);
 
   const handleDeleteFolder = useCallback(async (id: string) => {
-    if (window.confirm('确定要删除这个文件夹吗？文件夹必须为空才能删除。')) {
+    const confirmed = await confirm({
+      title: '删除文件夹',
+      description: '确定要删除这个文件夹吗？文件夹必须为空才能删除。',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive'
+    });
+    
+    if (confirmed) {
       try {
         await removeFolder({ variables: { id } });
       } catch (error: any) {
         alert(error.message || '删除失败');
       }
     }
-  }, [removeFolder]);
+  }, [removeFolder, confirm]);
 
   const folders = data?.folders || [];
 
@@ -171,6 +181,9 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }

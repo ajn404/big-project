@@ -55,6 +55,7 @@ const CONTENT_TYPE_OPTIONS = [
 
 export function PracticeNodeForm({ node, categories, tags, open, onClose }: PracticeNodeFormProps) {
   const isEditing = !!node
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -217,9 +218,21 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
     }))
   }
 
+  // 处理 ESC 键 - 当编辑器全屏时阻止关闭 Dialog
+  const handleEscapeKeyDown = (e: KeyboardEvent) => {
+    if (isEditorFullscreen) {
+      e.preventDefault()
+      e.stopPropagation()
+      // 不关闭 Dialog，让编辑器自己处理 ESC 键
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-full max-h-full overflow-auto p-0">
+      <DialogContent 
+        className="w-full max-w-full max-h-full overflow-auto p-0"
+        onEscapeKeyDown={handleEscapeKeyDown}
+      >
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>{isEditing ? '编辑文章' : '创建新文章'}</DialogTitle>
         </DialogHeader>
@@ -419,6 +432,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
                       onChange={(value) => handleInputChange('content', value)}
                       placeholder="输入 MDX 内容，支持 Markdown 语法和实时预览..."
                       height="500px"
+                      onFullscreenChange={setIsEditorFullscreen}
                     />
                   </div>
                 )}

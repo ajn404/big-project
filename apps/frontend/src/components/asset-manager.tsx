@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox } from '@workspace/ui-components';
+import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox, useConfirm } from '@workspace/ui-components';
 import {
   Upload,
   Search,
@@ -96,11 +96,21 @@ export function AssetManager({
     onCompleted: () => refetch(),
   });
 
+  const { confirm, ConfirmDialog } = useConfirm();
+
   const handleDelete = useCallback(async (id: string) => {
-    if (window.confirm('确定要删除这个资源吗？')) {
+    const confirmed = await confirm({
+      title: '删除资源',
+      description: '确定要删除这个资源吗？此操作不可恢复。',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive'
+    });
+    
+    if (confirmed) {
       await removeAsset({ variables: { id } });
     }
-  }, [removeAsset]);
+  }, [removeAsset, confirm]);
 
   const handleEdit = useCallback((asset: Asset) => {
     setEditingAsset(asset);
@@ -163,6 +173,7 @@ export function AssetManager({
   };
 
   return (
+    <>
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
       {/* 文件夹侧边栏 */}
       <div className="lg:col-span-1">
@@ -284,6 +295,8 @@ export function AssetManager({
       />
       </div>
     </div>
+    <ConfirmDialog />
+    </>
   );
 }
 

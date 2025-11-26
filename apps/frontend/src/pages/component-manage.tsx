@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from '@apollo/client'
-import { Button, Input, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Textarea, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@workspace/ui-components'
+import { Button, Input, Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Textarea, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, useConfirm } from '@workspace/ui-components'
 import { getAllRegisteredComponents } from '@workspace/ui-components'
 import {
   Plus,
@@ -44,6 +44,7 @@ export default function ComponentManage() {
   const [previewProps, setPreviewProps] = useState<Record<string, any>>({})
   const [registeredComponents, setRegisteredComponents] = useState<any[]>([])
   const [availableComponents, setAvailableComponents] = useState<any[]>([])
+  const { confirm, ConfirmDialog } = useConfirm()
 
   // GraphQL查询和变更
   const { data: componentsData, loading: componentsLoading, refetch: refetchComponents } = useQuery(GET_UI_COMPONENTS)
@@ -239,7 +240,15 @@ export default function ComponentManage() {
 
   // 删除组件
   const handleDeleteComponent = async (id: string) => {
-    if (confirm('确定要删除这个组件吗？')) {
+    const confirmed = await confirm({
+      title: '删除组件',
+      description: '确定要删除这个组件吗？此操作不可恢复。',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive'
+    })
+    
+    if (confirmed) {
       try {
         await deleteComponent({
           variables: { id }
@@ -888,6 +897,9 @@ export default function ComponentManage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   )
 }

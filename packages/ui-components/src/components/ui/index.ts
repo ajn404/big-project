@@ -10,6 +10,8 @@ export * from './slider'
 export * from './textarea'
 export * from './checkbox'
 export * from './context-menu'
+export * from './alert-dialog'
+export * from './confirm-dialog'
 
 // Export existing custom components
 export { ExampleCard } from './ExampleCard'

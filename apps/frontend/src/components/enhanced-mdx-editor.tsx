@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { Textarea, Button, Badge } from '@workspace/ui-components'
 import {
   Bold,
@@ -18,7 +18,9 @@ import {
   Minus,
   Component,
   Maximize,
-  Minimize
+  Minimize,
+  Undo,
+  Redo
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
 import { AssetSelectorDialog } from './asset-selector-dialog'
@@ -30,13 +32,21 @@ interface EnhancedMDXEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   height?: string
+  onFullscreenChange?: (isFullscreen: boolean) => void
+}
+
+// 历史记录类型
+interface HistoryState {
+  content: string
+  selection: { start: number; end: number }
 }
 
 export function EnhancedMDXEditor({
   value,
   onChange,
   placeholder = "输入 Markdown 内容...",
-  height = "400px"
+  height = "400px",
+  onFullscreenChange
 }: EnhancedMDXEditorProps) {
   const [isPreview, setIsPreview] = useState(false)
   const [showComponentMenu, setShowComponentMenu] = useState(false)
@@ -45,6 +55,11 @@ export function EnhancedMDXEditor({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // 撤销/重做历史记录
+  const [history, setHistory] = useState<HistoryState[]>([{ content: value, selection: { start: 0, end: 0 } }])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const isUndoRedoRef = useRef(false)
 
 
   // 组件模板库 - 动态从组件管理器获取
@@ -55,9 +70,69 @@ export function EnhancedMDXEditor({
     template: string
   }>>([])
 
+  // 保存历史记录
+  const saveToHistory = useCallback((content: string, selection: { start: number; end: number }) => {
+    if (isUndoRedoRef.current) return
+
+    setHistory(prev => {
+      const newHistory = prev.slice(0, historyIndex + 1)
+      newHistory.push({ content, selection })
+      
+      // 限制历史记录长度
+      if (newHistory.length > 100) {
+        newHistory.shift()
+        setHistoryIndex(prev => prev - 1)
+      }
+      
+      return newHistory
+    })
+    setHistoryIndex(prev => prev + 1)
+  }, [historyIndex])
+
+  // 撤销功能
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const prevState = history[historyIndex - 1]
+      isUndoRedoRef.current = true
+      onChange(prevState.content)
+      setHistoryIndex(prev => prev - 1)
+      
+      setTimeout(() => {
+        const textarea = textareaRef.current
+        if (textarea) {
+          textarea.focus()
+          textarea.setSelectionRange(prevState.selection.start, prevState.selection.end)
+        }
+        isUndoRedoRef.current = false
+      }, 0)
+    }
+  }, [historyIndex, history, onChange])
+
+  // 重做功能
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextState = history[historyIndex + 1]
+      isUndoRedoRef.current = true
+      onChange(nextState.content)
+      setHistoryIndex(prev => prev + 1)
+      
+      setTimeout(() => {
+        const textarea = textareaRef.current
+        if (textarea) {
+          textarea.focus()
+          textarea.setSelectionRange(nextState.selection.start, nextState.selection.end)
+        }
+        isUndoRedoRef.current = false
+      }, 0)
+    }
+  }, [historyIndex, history, onChange])
+
   const toggleFullscreen = () => {
     const newFullscreenState = !isFullscreen
     setIsFullscreen(newFullscreenState)
+
+    // 通知父组件全屏状态变化
+    onFullscreenChange?.(newFullscreenState)
 
     // 进入全屏时，确保退出预览模式（因为全屏已经是双栏显示）
     if (newFullscreenState && isPreview) {
@@ -68,8 +143,12 @@ export function EnhancedMDXEditor({
   // 处理全屏模式的键盘事件
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC 键退出全屏，但阻止事件传播避免关闭父对话框
       if (e.key === 'Escape' && isFullscreen) {
+        e.preventDefault()
+        e.stopPropagation()
         setIsFullscreen(false)
+        onFullscreenChange?.(false)
       }
       // F11 键切换全屏
       if (e.key === 'F11') {
@@ -79,7 +158,7 @@ export function EnhancedMDXEditor({
     }
 
     if (isFullscreen) {
-      document.addEventListener('keydown', handleKeyDown)
+      document.addEventListener('keydown', handleKeyDown, { capture: true })
       // 防止页面滚动
       document.body.style.overflow = 'hidden'
     } else {
@@ -87,7 +166,7 @@ export function EnhancedMDXEditor({
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('keydown', handleKeyDown, { capture: true })
       document.body.style.overflow = ''
     }
   }, [isFullscreen])
@@ -198,6 +277,9 @@ return createElement(
     const selectedText = textarea.value.substring(start, end)
     const textToInsert = selectedText || defaultText
 
+    // 保存当前状态到历史记录
+    saveToHistory(textarea.value, { start, end })
+
     const newText =
       textarea.value.substring(0, start) +
       before + textToInsert + after +
@@ -205,12 +287,18 @@ return createElement(
 
     onChange(newText)
 
-    // 重新聚焦并设置光标位置
+    // 重新聚焦并设置光标位置，确保滚动到正确位置
     setTimeout(() => {
       textarea.focus()
       const newStart = start + before.length
       const newEnd = newStart + textToInsert.length
       textarea.setSelectionRange(newStart, newEnd)
+      
+      // 确保光标可见，滚动到光标位置
+      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight)
+      const currentLine = textarea.value.substring(0, newStart).split('\n').length
+      const scrollTop = (currentLine - 5) * lineHeight // 保持光标上方有几行可见
+      textarea.scrollTop = Math.max(0, scrollTop)
     }, 0)
   }
 
@@ -221,6 +309,9 @@ return createElement(
     const start = textarea.selectionStart
     const beforeCursor = textarea.value.substring(0, start)
     const afterCursor = textarea.value.substring(start)
+
+    // 保存当前状态到历史记录
+    saveToHistory(textarea.value, { start, end: start })
 
     // 检查是否需要添加换行符
     const needsNewlineBefore = beforeCursor.length > 0 && !beforeCursor.endsWith('\n')
@@ -236,11 +327,42 @@ return createElement(
       textarea.focus()
       const newPosition = start + prefix.length + text.length
       textarea.setSelectionRange(newPosition, newPosition)
+      
+      // 确保光标可见，滚动到光标位置
+      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 20
+      const currentLine = newText.substring(0, newPosition).split('\n').length
+      const scrollTop = (currentLine - 5) * lineHeight // 保持光标上方有几行可见
+      textarea.scrollTop = Math.max(0, scrollTop)
     }, 0)
   }
 
+  // 工具栏按钮类型
+  interface ToolbarButton {
+    icon: React.ComponentType<{ className?: string }>
+    label: string
+    action: () => void
+    disabled?: boolean
+  }
+
   // 工具栏按钮配置
-  const toolbarButtons = [
+  const toolbarButtons: { group: string; buttons: ToolbarButton[] }[] = [
+    {
+      group: '编辑',
+      buttons: [
+        { 
+          icon: Undo, 
+          label: '撤销', 
+          action: undo,
+          disabled: historyIndex <= 0
+        },
+        { 
+          icon: Redo, 
+          label: '重做', 
+          action: redo,
+          disabled: historyIndex >= history.length - 1
+        },
+      ]
+    },
     {
       group: '标题',
       buttons: [
@@ -306,6 +428,18 @@ return createElement(
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
+        case 'z':
+          e.preventDefault()
+          if (e.shiftKey) {
+            redo() // Ctrl+Shift+Z 重做
+          } else {
+            undo() // Ctrl+Z 撤销
+          }
+          break
+        case 'y':
+          e.preventDefault()
+          redo() // Ctrl+Y 重做
+          break
         case 'b':
           e.preventDefault()
           insertText('**', '**', '粗体文本')
@@ -332,9 +466,20 @@ return createElement(
     }
   }
 
-  // 自动补全括号
+  // 处理输入变化
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(e.target.value)
+    const newValue = e.target.value
+    const textarea = e.target
+    
+    // 保存历史记录 (使用防抖避免过于频繁的保存)
+    if (!isUndoRedoRef.current && Math.abs(newValue.length - value.length) > 5) {
+      saveToHistory(value, { 
+        start: textarea.selectionStart, 
+        end: textarea.selectionEnd 
+      })
+    }
+    
+    onChange(newValue)
   }
 
   // 同步滚动处理
@@ -386,6 +531,7 @@ return createElement(
                     key={buttonIndex}
                     variant={button.label === '插入组件' && showComponentMenu ? "default" : "ghost"}
                     size="sm"
+                    disabled={button.disabled}
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
@@ -638,6 +784,8 @@ return createElement(
         <div className="flex items-center gap-2">
           {/* 快捷键提示 */}
           <div className="hidden md:flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">Ctrl+Z 撤销</Badge>
+            <Badge variant="outline" className="text-xs">Ctrl+Y 重做</Badge>
             <Badge variant="outline" className="text-xs">Ctrl+B 粗体</Badge>
             <Badge variant="outline" className="text-xs">Ctrl+I 斜体</Badge>
             <Badge variant="outline" className="text-xs">Ctrl+K 链接</Badge>

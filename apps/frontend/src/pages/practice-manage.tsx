@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@workspace/ui-componen
 import { Button } from '@workspace/ui-components'
 import { Badge } from '@workspace/ui-components'
 import { Input } from '@workspace/ui-components'
+import { useConfirm } from '@workspace/ui-components'
 import { formatDate, getDifficultyColor, getDifficultyLabel } from '@/lib/utils'
 import { 
   Plus, 
@@ -25,6 +26,7 @@ export function PracticeManagePage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [editingNode, setEditingNode] = useState<any>(null)
+  const { confirm, ConfirmDialog } = useConfirm()
 
   const { data: practiceData, loading: practiceLoading, refetch } = useQuery(GET_PRACTICE_NODES)
   const { data: categoriesData } = useQuery(GET_CATEGORIES)
@@ -37,7 +39,15 @@ export function PracticeManagePage() {
   })
 
   const handleDelete = async (id: string) => {
-    if (confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
+    const confirmed = await confirm({
+      title: '删除文章',
+      description: '确定要删除这篇文章吗？此操作不可恢复。',
+      confirmText: '删除',
+      cancelText: '取消',
+      variant: 'destructive'
+    })
+    
+    if (confirmed) {
       try {
         await deletePracticeNode({ variables: { id } })
       } catch (error) {
@@ -260,6 +270,9 @@ export function PracticeManagePage() {
         onClose={() => setShowImportDialog(false)}
         onImportComplete={handleImportComplete}
       />
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   )
 }
