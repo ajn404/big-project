@@ -27,12 +27,12 @@ export function ImagePreview({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [hasDragged, setHasDragged] = useState(false)
-  
+
   // 直接DOM操作相关
   const imageRef = useRef<HTMLImageElement>(null)
   const currentScaleRef = useRef<number>(1)
   const animationFrame = useRef<number | null>(null)
-  
+
 
   const currentImage = images[currentIndex]
 
@@ -65,6 +65,7 @@ export function ImagePreview({
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      e.stopImmediatePropagation();
       switch (e.key) {
         case 'Escape':
           onClose()
@@ -87,14 +88,14 @@ export function ImagePreview({
           const oldScaleUp = currentScaleRef.current
           const newScaleUp = Math.min(oldScaleUp * 1.2, 5)
           if (newScaleUp === oldScaleUp) break
-          
+
           currentScaleRef.current = newScaleUp
-          
+
           // 计算缩放中心调整 (以屏幕中心为基准)
           const scaleRatioUp = newScaleUp / oldScaleUp
           const newXUp = position.x * scaleRatioUp
           const newYUp = position.y * scaleRatioUp
-          
+
           if (imageRef.current) {
             imageRef.current.style.transform = `translate(${newXUp}px, ${newYUp}px) scale(${newScaleUp}) rotate(${rotation}deg)`
           }
@@ -106,14 +107,14 @@ export function ImagePreview({
           const oldScaleDown = currentScaleRef.current
           const newScaleDown = Math.max(oldScaleDown / 1.2, 0.1)
           if (newScaleDown === oldScaleDown) break
-          
+
           currentScaleRef.current = newScaleDown
-          
+
           // 计算缩放中心调整 (以屏幕中心为基准)
           const scaleRatioDown = newScaleDown / oldScaleDown
           const newXDown = position.x * scaleRatioDown
           const newYDown = position.y * scaleRatioDown
-          
+
           if (imageRef.current) {
             imageRef.current.style.transform = `translate(${newXDown}px, ${newYDown}px) scale(${newScaleDown}) rotate(${rotation}deg)`
           }
@@ -131,9 +132,8 @@ export function ImagePreview({
           break
       }
     }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
   }, [isOpen, onClose, onPrevious, onNext, resetTransform])
 
   // 鼠标拖拽事件
@@ -150,23 +150,23 @@ export function ImagePreview({
     if (isDragging && imageRef.current) {
       const newX = e.clientX - dragStart.x
       const newY = e.clientY - dragStart.y
-      
+
       // 检测是否真的移动了（防止微小的鼠标抖动）
       const deltaX = Math.abs(newX - position.x)
       const deltaY = Math.abs(newY - position.y)
       if (deltaX > 3 || deltaY > 3) {
         setHasDragged(true)
       }
-      
+
       // 直接更新DOM，使用当前实际的缩放和旋转值
       const currentScale = currentScaleRef.current
       imageRef.current.style.transform = `translate(${newX}px, ${newY}px) scale(${currentScale}) rotate(${rotation}deg)`
-      
+
       // 批量更新React状态
       if (animationFrame.current) {
         cancelAnimationFrame(animationFrame.current)
       }
-      
+
       animationFrame.current = requestAnimationFrame(() => {
         setPosition({ x: newX, y: newY })
         animationFrame.current = null
@@ -192,55 +192,55 @@ export function ImagePreview({
   // 直接DOM操作的滚轮缩放（以鼠标为中心）
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault()
-    
+
     if (!imageRef.current) return
-    
+
     // 使用更小的缩放增量
     const scaleFactor = 1.02
     const delta = e.deltaY > 0 ? 1 / scaleFactor : scaleFactor
     const oldScale = currentScaleRef.current
     const newScale = Math.max(0.1, Math.min(5, oldScale * delta))
-    
+
     if (newScale === oldScale) return
-    
+
     currentScaleRef.current = newScale
-    
+
     // 获取容器和鼠标位置信息
     const container = imageRef.current.parentElement
     if (!container) return
-    
+
     const containerRect = container.getBoundingClientRect()
     const mouseX = e.clientX - containerRect.left - containerRect.width / 2
     const mouseY = e.clientY - containerRect.top - containerRect.height / 2
-    
+
     // 获取当前变换值
     const currentTransform = imageRef.current.style.transform
     const transformMatch = currentTransform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)\s*scale\(([-\d.]+)\)\s*rotate\(([-\d.]+)deg\)/)
-    
+
     let translateX = position.x
     let translateY = position.y
     let rotateValue = rotation
-    
+
     if (transformMatch) {
       translateX = parseFloat(transformMatch[1]) || position.x
       translateY = parseFloat(transformMatch[2]) || position.y
       rotateValue = parseFloat(transformMatch[4]) || rotation
     }
-    
+
     // 计算缩放中心调整
     const scaleRatio = newScale / oldScale
     const deltaX = mouseX - translateX
     const deltaY = mouseY - translateY
     const newTranslateX = translateX + deltaX * (1 - scaleRatio)
     const newTranslateY = translateY + deltaY * (1 - scaleRatio)
-    
+
     imageRef.current.style.transform = `translate(${newTranslateX}px, ${newTranslateY}px) scale(${newScale}) rotate(${rotateValue}deg)`
-    
+
     // 批量更新React状态，减少重渲染
     if (animationFrame.current) {
       cancelAnimationFrame(animationFrame.current)
     }
-    
+
     animationFrame.current = requestAnimationFrame(() => {
       setScale(newScale)
       setPosition({ x: newTranslateX, y: newTranslateY })
@@ -291,14 +291,14 @@ export function ImagePreview({
               const oldScale = currentScaleRef.current
               const newScale = Math.min(oldScale * 1.2, 5)
               if (newScale === oldScale) return
-              
+
               currentScaleRef.current = newScale
-              
+
               // 计算缩放中心调整 (以屏幕中心为基准)
               const scaleRatio = newScale / oldScale
               const newX = position.x * scaleRatio
               const newY = position.y * scaleRatio
-              
+
               if (imageRef.current) {
                 imageRef.current.style.transform = `translate(${newX}px, ${newY}px) scale(${newScale}) rotate(${rotation}deg)`
               }
@@ -316,14 +316,14 @@ export function ImagePreview({
               const oldScale = currentScaleRef.current
               const newScale = Math.max(oldScale / 1.2, 0.1)
               if (newScale === oldScale) return
-              
+
               currentScaleRef.current = newScale
-              
+
               // 计算缩放中心调整 (以屏幕中心为基准)
               const scaleRatio = newScale / oldScale
               const newX = position.x * scaleRatio
               const newY = position.y * scaleRatio
-              
+
               if (imageRef.current) {
                 imageRef.current.style.transform = `translate(${newX}px, ${newY}px) scale(${newScale}) rotate(${rotation}deg)`
               }
@@ -404,17 +404,17 @@ export function ImagePreview({
             if (hasDragged) {
               return
             }
-            
+
             if (currentScaleRef.current <= 1) {
               const oldScale = currentScaleRef.current
               const newScale = 2
               currentScaleRef.current = newScale
-              
+
               // 计算缩放中心调整 (以屏幕中心为基准)
               const scaleRatio = newScale / oldScale
               const newX = position.x * scaleRatio
               const newY = position.y * scaleRatio
-              
+
               if (imageRef.current) {
                 imageRef.current.style.transform = `translate(${newX}px, ${newY}px) scale(${newScale}) rotate(${rotation}deg)`
               }

@@ -159,7 +159,7 @@ export const Component = ({
               {children ? (
                 children
               ) : (
-                <div className="size-80 flex justify-center items-center border-2 border-dashed rounded-lg">
+                <div className="size-10 flex justify-center items-center border-2 border-dashed rounded-lg">
                   Right-click here.
                 </div>
               )}

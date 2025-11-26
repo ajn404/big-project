@@ -19,7 +19,11 @@ import {
   Palette,
   Info,
   Moon,
-  Sun
+  Sun,
+  Expand,
+  PanelLeft,
+  Split,
+  X
 } from 'lucide-react'
 
 // 配置 Monaco Editor 使用本地静态资源
@@ -230,6 +234,14 @@ function ShaderMaterial({
     if (materialRef.current && isRunning) {
       materialRef.current.uniforms.u_time.value = state.clock.elapsedTime
     }
+    if (!materialRef.current) return
+    const { size, gl } = state
+    const dpr = gl.getPixelRatio()
+
+    materialRef.current.uniforms.u_resolution.value.set(
+      size.width * dpr,
+      size.height * dpr
+    )
   })
 
   const material = useMemo(() => {
@@ -272,6 +284,8 @@ function ShaderPlayground({
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isRunning, setIsRunning] = useState(true)
   const [activeTab, setActiveTab] = useState<'fragment' | 'vertex'>('fragment')
+  const [viewMode, setViewMode] = useState<'split' | 'editor' | 'fullscreen'>('editor')
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 主题检测
   useEffect(() => {
@@ -333,105 +347,142 @@ function ShaderPlayground({
     return categories
   }, [])
 
-  return (
-    <div className={cn("w-full space-y-6 p-6", className)}>
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Shader Playground
-              </CardTitle>
-              <CardDescription>
-                实时 GLSL Shader 编辑器和可视化工具
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTheme}
-              >
-                {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRunning(!isRunning)}
-              >
-                {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetShaders}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-              {showEditor && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  {isEditing ? '隐藏编辑器' : '显示编辑器'}
-                </Button>
-              )}
-            </div>
+  const mainContent = (
+    <Card>
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Shader Playground
+            </CardTitle>
+            <CardDescription>
+              实时 GLSL Shader 编辑器和可视化工具
+            </CardDescription>
           </div>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* 预设选择器 */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Code2 className="h-4 w-4" />
-              <span className="text-sm font-medium">预设案例</span>
-            </div>
-            <Select value={selectedPreset} onValueChange={loadPreset}>
-              <SelectTrigger className="w-[240px]">
-                <SelectValue placeholder="选择预设案例" />
+          <div className="flex items-center gap-2">
+            <Select value={viewMode} onValueChange={(value) => setViewMode(value as any)}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="选择视图" />
               </SelectTrigger>
-              <SelectContent >
-                {Object.entries(categorizedPresets).map(([category, presets]) => (
-                  <div key={category}>
-                    <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                      {category}
-                    </div>
-                    {presets.map((preset) => (
-                      <SelectItem key={preset.name} value={preset.name}>
-                        <div className="flex justify-center items-center gap-4">
-                          <div className="font-medium">{shaderPresets[preset.name].name}</div>
-                          {preset.description && (
-                            <div className="text-xs text-muted-foreground">
-                              {preset.description}
-                            </div>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
+              <SelectContent>
+                <SelectItem value="split">
+                  <div className="flex items-center gap-2">
+                    <Split className="h-4 w-4" />
+                    <span>分屏视图</span>
                   </div>
-                ))}
+                </SelectItem>
+                <SelectItem value="editor">
+                  <div className="flex items-center gap-2">
+                    <PanelLeft className="h-4 w-4" />
+                    <span>仅编辑器</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="fullscreen">
+                  <div className="flex items-center gap-2">
+                    <Expand className="h-4 w-4" />
+                    <span>全屏预览</span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleTheme}
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsRunning(!isRunning)}
+            >
+              {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetShaders}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            {showEditor && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Code2 className="h-4 w-4 mr-2" />
+                {isEditing ? '隐藏代码' : '显示代码'}
+              </Button>
+            )}
           </div>
+        </div>
+      </CardHeader>
 
-          <div className="@container">
-            <div className="flex flex-col @3xl:flex-row gap-6 @3xl:items-center">
-              {/* 3D 渲染区域 */}
-              <Card className="flex-shrink-0 @3xl:flex-shrink-0">
-                <CardContent className="p-0">
+      <CardContent className="space-y-4">
+        {/* 预设选择器 */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Code2 className="h-4 w-4" />
+            <span className="text-sm font-medium">预设案例</span>
+          </div>
+          <Select value={selectedPreset} onValueChange={loadPreset}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="选择预设案例" />
+            </SelectTrigger>
+            <SelectContent >
+              {Object.entries(categorizedPresets).map(([category, presets]) => (
+                <div key={category}>
+                  <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                    {category}
+                  </div>
+                  {presets.map((preset) => (
+                    <SelectItem key={preset.name} value={preset.name}>
+                      <div className="flex justify-center items-center gap-4">
+                        <div className="font-medium">{shaderPresets[preset.name].name}</div>
+                        {preset.description && (
+                          <div className="text-xs text-muted-foreground">
+                            {preset.description}
+                          </div>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </div>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="@container">
+          <div className={cn(
+            "flex gap-6",
+            viewMode === 'split' && "flex-col @3xl:flex-row @3xl:items-center",
+            viewMode === 'editor' && "flex-col",
+            viewMode === 'fullscreen' && "h-full"
+          )}>
+            {/* 3D 渲染区域 */}
+            {viewMode !== 'editor' && (
+              <Card className={cn(
+                "flex-shrink-0",
+                viewMode === 'split' ? "@3xl:flex-shrink-0" : "flex-1 w-full",
+                viewMode === 'fullscreen' && "h-full"
+              )}>
+                <CardContent className={cn("p-0", viewMode === 'fullscreen' && "h-full")}>
                   <div
-                    className="relative overflow-hidden rounded-lg border mx-auto @3xl:mx-0"
-                    style={{ 
-                      width: typeof width === 'number' && width > 600 ? Math.min(width, 500) : width, 
-                      height: typeof height === 'number' && height > 400 ? Math.min(height, 400) : height 
-                    }}
+                    className={cn(
+                      "relative overflow-hidden rounded-lg border",
+                      viewMode === 'fullscreen' ? "w-full h-full" : "mx-auto @3xl:mx-0"
+                    )}
+                    style={viewMode !== 'fullscreen' ? {
+                      width: typeof width === 'number' ? Math.min(width, 500) : '100%',
+                      height: typeof height === 'number' ? Math.min(height, 400) : 400
+                    } : {}}
                   >
                     <Canvas
-                      camera={{ position: [0, 0, 2], fov: 75 }}
+                      camera={{ position: [0, 0, 1] }}
                       className="bg-black"
                     >
                       <ShaderMaterial
@@ -443,10 +494,14 @@ function ShaderPlayground({
                   </div>
                 </CardContent>
               </Card>
+            )}
 
-              {/* 代码编辑器 */}
-              {showEditor && isEditing && (
-                <Card className="flex-1 @3xl:min-w-[500px] w-full">
+            {/* 代码编辑器 */}
+            {showEditor && isEditing && viewMode !== 'fullscreen' && (
+              <Card className={cn(
+                "w-full",
+                viewMode === 'split' ? "flex-1 @3xl:min-w-[500px]" : "flex-1"
+              )}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Code2 className="h-4 w-4" />
@@ -553,10 +608,46 @@ function ShaderPlayground({
                 </CardContent>
               </Card>
             )}
-            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+
+  return (
+    <div className={cn("w-full h-full", className)} ref={containerRef}>
+      {viewMode === 'fullscreen' ? (
+        <div className="fixed inset-0 bg-background z-50 p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (containerRef.current) {
+                containerRef.current.scrollIntoView()
+              }
+              setViewMode('split')
+            }}
+            className="absolute top-6 right-6 z-10"
+          >
+            <X className="h-4 w-4 mr-2" />
+            退出全屏
+          </Button>
+          <div className="w-full h-full">
+            <Canvas
+              camera={{ position: [0, 0, 1] }}
+              className="bg-black rounded-lg"
+            >
+              <ShaderMaterial
+                fragmentShader={fragmentShader}
+                vertexShader={vertexShader}
+                isRunning={isRunning}
+              />
+            </Canvas>
+          </div>
+        </div>
+      ) : mainContent}
     </div>
   )
 }

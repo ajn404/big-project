@@ -38,7 +38,6 @@ export function ComponentRenderer({ componentName, props = {} }: ComponentRender
       </Alert>
     )
   }
-  console.log(ComponentManager.getAvailableComponents(),'ComponentManager.getAvailableComponents()')
   const componentInfo = ComponentManager.getAvailableComponents().find(c => c.name === componentName) || null
 
   if (!componentInfo) {

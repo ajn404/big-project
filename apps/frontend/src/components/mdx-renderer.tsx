@@ -584,18 +584,20 @@ const customComponents = {
     // 解析属性
     const attrs: any = {}
     if (attributes) {
-      // 简单的属性解析 type="info" -> {type: "info"}
-      const attrMatches = attributes.match(/(\w+)="([^"]+)"/g)
+      const attrMatches = attributes.match(/(\w+)="([^"]*)"/g)
       if (attrMatches) {
         attrMatches.forEach((match: string) => {
-          const [, key, value] = match.match(/(\w+)="([^"]+)"/) || []
-          if (key && value) attrs[key] = value
+          const [, key, valueStr] = match.match(/(\w+)="([^"]*)"/) || []
+          if (key && valueStr !== undefined) {
+            let value: any = valueStr;
+            if (valueStr === 'true') value = true;
+            else if (valueStr === 'false') value = false;
+            else if (!isNaN(Number(valueStr)) && valueStr.trim() !== '') value = Number(valueStr);
+            attrs[key] = value;
+          }
         })
       }
     }
-
-    console.log(`${attrs}`, 'attrs', attributes,props)
-
     
     switch (component) {
       case 'button':
@@ -662,9 +664,13 @@ const customComponents = {
         // 渲染component-renderer.tsx中的React组件
         const componentName = attrs.component
         if (componentName) {
+          const finalProps = { ...attrs };
+          if (content && componentName === 'ShaderPlayground') {
+              finalProps.initialFragmentShader = content;
+          }
           return (
             <div className="my-6">
-              <ComponentRenderer componentName={componentName} props={{}} />
+              <ComponentRenderer componentName={componentName} props={finalProps} />
             </div>
           )
         }
@@ -678,7 +684,6 @@ const customComponents = {
         )
         
       case 'sandbox':
-        console.log('content', content)
         // 代码沙箱组件
         return (
           <div className="my-6">

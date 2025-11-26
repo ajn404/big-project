@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components';
 import { AssetManager } from './asset-manager';
 import { Asset, AssetType } from '@/types/asset';
@@ -17,9 +18,13 @@ export function AssetSelectorDialog({
   allowedTypes = [AssetType.IMAGE],
   title = '选择资源'
 }: AssetSelectorDialogProps) {
+  const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
   const handleSelect = (asset: Asset) => {
     onSelect(asset);
     onOpenChange(false);
+  };
+  const handleFolderChange = (folderId: string | undefined) => {
+    setCurrentFolderId(folderId);
   };
 
   return (
@@ -33,6 +38,8 @@ export function AssetSelectorDialog({
             onSelect={handleSelect}
             selectionMode={true}
             allowedTypes={allowedTypes}
+            currentFolderId={currentFolderId}
+            onFolderChange={handleFolderChange}
           />
         </div>
       </DialogContent>

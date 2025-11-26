@@ -96,7 +96,7 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
       cancelText: '取消',
       variant: 'destructive'
     });
-    
+
     if (confirmed) {
       try {
         await removeFolder({ variables: { id } });
@@ -145,7 +145,7 @@ export function FolderManager({ currentFolderId, onFolderSelect, onCreateFolder,
       )}
 
       {/* 文件夹列表 */}
-      <div className="space-y-2 h-[calc(100vh-500px)] overflow-auto">
+      <div className="space-y-2 max-h-[calc(100vh-550px)] overflow-auto">
         {loading ? (
           <div>加载中...</div>
         ) : folders.length === 0 ? (
@@ -207,7 +207,7 @@ function FolderCard({ folder, onSelect, onEdit, onDelete, onMoveAsset }: FolderC
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDropTarget(false);
-    
+
     const assetId = e.dataTransfer.getData('text/plain');
     if (assetId && onMoveAsset) {
       onMoveAsset(assetId, folder.id);
@@ -225,10 +225,9 @@ function FolderCard({ folder, onSelect, onEdit, onDelete, onMoveAsset }: FolderC
   };
 
   return (
-    <Card 
-      className={`group cursor-pointer hover:shadow-md transition-all ${
-        isDropTarget ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-      }`}
+    <Card
+      className={`group cursor-pointer hover:shadow-md transition-all ${isDropTarget ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+        }`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -242,11 +241,9 @@ function FolderCard({ folder, onSelect, onEdit, onDelete, onMoveAsset }: FolderC
             >
               <FolderIcon className="w-5 h-5 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" title={`${assetCount} 个文件 · ${childCount} 个子文件夹`}>
               <h4 className="font-medium truncate">{folder.name}</h4>
-              <p className="text-sm text-gray-500">
-                {assetCount} 个文件 · {childCount} 个子文件夹
-              </p>
+
               {folder.description && (
                 <p className="text-xs text-gray-400 truncate mt-1">
                   {folder.description}
@@ -334,9 +331,8 @@ function CreateFolderForm({ onSubmit }: CreateFolderFormProps) {
             <button
               key={colorOption}
               type="button"
-              className={`w-8 h-8 rounded-full border-2 ${
-                color === colorOption ? 'border-gray-400' : 'border-transparent'
-              }`}
+              className={`w-8 h-8 rounded-full border-2 ${color === colorOption ? 'border-gray-400' : 'border-transparent'
+                }`}
               style={{ backgroundColor: colorOption }}
               onClick={() => setColor(colorOption)}
             />
@@ -400,9 +396,8 @@ function EditFolderForm({ folder, onSubmit, onCancel }: EditFolderFormProps) {
             <button
               key={colorOption}
               type="button"
-              className={`w-8 h-8 rounded-full border-2 ${
-                color === colorOption ? 'border-gray-400' : 'border-transparent'
-              }`}
+              className={`w-8 h-8 rounded-full border-2 ${color === colorOption ? 'border-gray-400' : 'border-transparent'
+                }`}
               style={{ backgroundColor: colorOption }}
               onClick={() => setColor(colorOption)}
             />

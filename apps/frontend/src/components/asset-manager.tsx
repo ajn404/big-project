@@ -1,6 +1,27 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Badge, Card, CardContent, CardFooter, Textarea, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Checkbox, useConfirm } from '@workspace/ui-components';
+import { 
+  Button, 
+  Input, 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger, 
+  Badge, 
+  Card, 
+  CardContent, 
+  CardFooter, 
+  Textarea, 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue, 
+  Checkbox, 
+  useConfirm,
+  RadialMenu
+} from '@workspace/ui-components';
 import {
   Upload,
   Search,
@@ -336,7 +357,23 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, onMoveToFolde
     setIsDragging(false);
   };
 
-  return (
+  const menuItems = [
+    { id: 1, label: 'Edit', icon: Edit },
+    { id: 2, label: 'Preview', icon: EyeIcon },
+    { id: 3, label: 'Delete', icon: Trash2 },
+  ];
+
+  const handleMenuSelect = (item: { id: number }) => {
+      if (item.id === 1) {
+          onEdit();
+      } else if (item.id === 2) {
+          onPreview();
+      } else if (item.id === 3) {
+          onDelete();
+      }
+  };
+
+  const cardContent = (
     <Card 
       className={`group overflow-hidden transition-all hover:shadow-md ${
         selectionMode ? 'cursor-pointer hover:ring-2 hover:ring-blue-500' : ''
@@ -358,22 +395,6 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, onMoveToFolde
           ) : (
             <IconComponent className="w-12 h-12 text-gray-400" />
           )}
-
-          {!selectionMode && (
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-              <div className="flex gap-2">
-                <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onEdit(); }}>
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); onPreview(); }}>
-                  <EyeIcon className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </CardContent>
       <CardFooter className="p-3">
@@ -386,11 +407,6 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, onMoveToFolde
               <Badge variant="secondary" className="text-xs">
                 {asset.type}
               </Badge>
-              {/* {asset.type === AssetType.IMAGE && asset.isMosaicDefault && (
-                <Badge variant="outline" className="text-xs">
-                  马赛克
-                </Badge>
-              )} */}
             </div>
             <span className="text-xs text-gray-500">
               {formatFileSize(asset.size)}
@@ -405,6 +421,16 @@ function AssetCard({ asset, onSelect, onEdit, onDelete, onPreview, onMoveToFolde
       </CardFooter>
     </Card>
   );
+
+  if (selectionMode) {
+    return cardContent;
+  }
+
+  return (
+    <RadialMenu menuItems={menuItems} onSelect={handleMenuSelect} size={180}>
+      {cardContent}
+    </RadialMenu>
+  )
 }
 
 interface AssetEditDialogProps {
