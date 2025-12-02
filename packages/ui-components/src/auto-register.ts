@@ -37,15 +37,15 @@ export function createAutoRegisterComponent(metadata: ComponentMetadata) {
       metadata
     })
     
-    // 立即注册组件（如果注册表已准备就绪）
-    try {
-      registerComponent(metadata.id, Component, {
-        ...metadata,
-        template: metadata.template || `:::react{component="${metadata.name}"}\\n内容\\n:::`
-      })
-    } catch (error) {
-      console.warn(`延迟注册组件 ${metadata.name}:`, error)
-    }
+    // // 立即注册组件（如果注册表已准备就绪）
+    // try {
+    //   registerComponent(metadata.id, Component, {
+    //     ...metadata,
+    //     template: metadata.template || `:::react{component="${metadata.name}"}\\n内容\\n:::`
+    //   })
+    // } catch (error) {
+    //   console.warn(`延迟注册组件 ${metadata.name}:`, error)
+    // }
     
     return Component
   }

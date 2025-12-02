@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-
 import { Save, X } from 'lucide-react'
 import { EnhancedMDXEditor } from './enhanced-mdx-editor'
 import { Textarea } from '@workspace/ui-components'
+import { DialogDescription } from '@radix-ui/react-dialog'
 
 interface Category {
   id: string
@@ -148,7 +149,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.title || !formData.description || !formData.categoryName) {
       alert('请填写必填字段')
       return
@@ -220,21 +221,18 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
 
   // 处理 ESC 键 - 当编辑器全屏时阻止关闭 Dialog
   const handleEscapeKeyDown = (e: KeyboardEvent) => {
-    if (isEditorFullscreen) {
-      e.preventDefault()
-      e.stopPropagation()
-      // 不关闭 Dialog，让编辑器自己处理 ESC 键
-    }
+    e.preventDefault()
   }
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent 
+    <Dialog open={open} onOpenChange={onClose} >
+      <DialogContent
         className="w-full max-w-full max-h-full overflow-auto p-0"
         onEscapeKeyDown={handleEscapeKeyDown}
+        onInteractOutside={(e) => { e.preventDefault() }}
       >
         <DialogHeader className="p-6 pb-0">
           <DialogTitle>{isEditing ? '编辑文章' : '创建新文章'}</DialogTitle>
+          <DialogDescription>美好的一天开始了🙂</DialogDescription>
         </DialogHeader>
         <div className="p-6 pt-0">
           <form onSubmit={handleSubmit} className="space-y-6">

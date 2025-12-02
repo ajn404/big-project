@@ -33,6 +33,282 @@ loader.config({
   }
 })
 
+// GLSL 语言配置
+const configureGLSLLanguage = () => {
+  loader.init().then((monaco) => {
+    // 注册 GLSL 语言（如果还没有注册）
+    const languages = monaco.languages.getLanguages()
+    const hasGLSL = languages.some(lang => lang.id === 'glsl')
+    
+    if (!hasGLSL) {
+      monaco.languages.register({ id: 'glsl' })
+    }
+
+    // GLSL 关键字和内置函数
+    const glslKeywords = [
+      'attribute', 'const', 'uniform', 'varying', 'break', 'continue', 'do', 'for', 'while',
+      'if', 'else', 'in', 'out', 'inout', 'true', 'false', 'discard', 'return',
+      'precision', 'highp', 'mediump', 'lowp', 'invariant', 'smooth', 'flat', 'noperspective'
+    ]
+
+    const glslTypes = [
+      'void', 'bool', 'int', 'float', 'vec2', 'vec3', 'vec4', 'bvec2', 'bvec3', 'bvec4',
+      'ivec2', 'ivec3', 'ivec4', 'mat2', 'mat3', 'mat4', 'mat2x2', 'mat2x3', 'mat2x4',
+      'mat3x2', 'mat3x3', 'mat3x4', 'mat4x2', 'mat4x3', 'mat4x4',
+      'sampler1D', 'sampler2D', 'sampler3D', 'samplerCube', 'sampler1DShadow', 'sampler2DShadow'
+    ]
+
+    const glslBuiltins = [
+      'radians', 'degrees', 'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sinh', 'cosh', 'tanh',
+      'pow', 'exp', 'log', 'exp2', 'log2', 'sqrt', 'inversesqrt', 'abs', 'sign', 'floor',
+      'ceil', 'fract', 'mod', 'min', 'max', 'clamp', 'mix', 'step', 'smoothstep',
+      'length', 'distance', 'dot', 'cross', 'normalize', 'reflect', 'refract',
+      'texture2D', 'textureCube', 'texture', 'textureSize', 'textureOffset'
+    ]
+
+    const glslConstants = [
+      'gl_Position', 'gl_PointSize', 'gl_FragCoord', 'gl_FrontFacing', 'gl_FragColor',
+      'gl_FragData', 'gl_PointCoord', 'gl_Vertex', 'gl_Normal', 'gl_MultiTexCoord0'
+    ]
+
+    // 设置语法高亮规则
+    monaco.languages.setMonarchTokensProvider('glsl', {
+      keywords: glslKeywords,
+      types: glslTypes,
+      builtins: glslBuiltins,
+      constants: glslConstants,
+
+      tokenizer: {
+        root: [
+          [/\/\/.*$/, 'comment'],
+          [/\/\*/, 'comment', '@comment'],
+          [/#[^\r\n]*/, 'preprocessor'],
+          [/[a-zA-Z_]\w*/, {
+            cases: {
+              '@keywords': 'keyword',
+              '@types': 'type',
+              '@builtins': 'predefined',
+              '@constants': 'variable.predefined',
+              '@default': 'identifier'
+            }
+          }],
+          [/\d*\.\d+([eE][\-+]?\d+)?[fF]?/, 'number.float'],
+          [/\d+[fF]/, 'number.float'],
+          [/\d+/, 'number'],
+          [/"([^"\\]|\\.)*$/, 'string.invalid'],
+          [/"/, 'string', '@string'],
+          [/[{}()\[\]]/, '@brackets'],
+          [/[<>]=?/, 'operator'],
+          [/[!=]==?/, 'operator'],
+          [/&&|\|\||[&|^]/, 'operator'],
+          [/[+\-*/%]/, 'operator'],
+          [/[;,.]/, 'delimiter']
+        ],
+
+        comment: [
+          [/[^\/*]+/, 'comment'],
+          [/\*\//, 'comment', '@pop'],
+          [/[\/*]/, 'comment']
+        ],
+
+        string: [
+          [/[^\\"]+/, 'string'],
+          [/"/, 'string', '@pop']
+        ]
+      }
+    })
+
+    // 设置自动补全
+    monaco.languages.registerCompletionItemProvider('glsl', {
+      provideCompletionItems: (model, position, context, token) => {
+        const word = model.getWordUntilPosition(position)
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn
+        }
+
+        const suggestions = [
+          ...glslKeywords.map(keyword => ({
+            label: keyword,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: keyword,
+            range: range
+          })),
+          ...glslTypes.map(type => ({
+            label: type,
+            kind: monaco.languages.CompletionItemKind.TypeParameter,
+            insertText: type,
+            range: range
+          })),
+          ...glslBuiltins.map(builtin => ({
+            label: builtin,
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: `${builtin}($1)`,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: range
+          })),
+          ...glslConstants.map(constant => ({
+            label: constant,
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: constant,
+            range: range
+          }))
+        ]
+        
+        return { suggestions }
+      }
+    })
+
+    // 设置悬停提示
+    monaco.languages.registerHoverProvider('glsl', {
+      provideHover: (model, position) => {
+        const word = model.getWordAtPosition(position)
+        if (word) {
+          const hoverInfo = getGLSLHoverInfo(word.word)
+          if (hoverInfo) {
+            return {
+              range: new monaco.Range(
+                position.lineNumber,
+                word.startColumn,
+                position.lineNumber,
+                word.endColumn
+              ),
+              contents: [{ value: hoverInfo }]
+            }
+          }
+        }
+        return null
+      }
+    })
+  })
+}
+
+// GLSL 悬停信息
+const getGLSLHoverInfo = (word: string): string | null => {
+  const hoverData: Record<string, string> = {
+    'vec2': '`vec2` - 2D vector with x, y components',
+    'vec3': '`vec3` - 3D vector with x, y, z components',
+    'vec4': '`vec4` - 4D vector with x, y, z, w components',
+    'mat2': '`mat2` - 2x2 matrix',
+    'mat3': '`mat3` - 3x3 matrix',
+    'mat4': '`mat4` - 4x4 matrix',
+    'texture2D': '`texture2D(sampler, coord)` - Sample a 2D texture',
+    'mix': '`mix(x, y, a)` - Linear interpolation between x and y',
+    'length': '`length(v)` - Calculate the length of a vector',
+    'normalize': '`normalize(v)` - Return a vector in the same direction but with length 1',
+    'dot': '`dot(x, y)` - Calculate dot product of two vectors',
+    'cross': '`cross(x, y)` - Calculate cross product of two 3D vectors',
+    'sin': '`sin(x)` - Sine function',
+    'cos': '`cos(x)` - Cosine function',
+    'smoothstep': '`smoothstep(edge0, edge1, x)` - Smooth interpolation between 0 and 1'
+  }
+  
+  return hoverData[word] || null
+}
+
+// 在组件挂载时配置语言
+configureGLSLLanguage()
+
+// Shader 错误检测函数
+const validateShaderCode = (code: string, type: 'vertex' | 'fragment'): string | undefined => {
+  const errors: string[] = []
+  
+  // 基本语法检查
+  const lines = code.split('\n')
+  
+  lines.forEach((line, index) => {
+    const lineNum = index + 1
+    const trimmedLine = line.trim()
+    
+    // 检查缺少分号
+    if (trimmedLine.length > 0 && 
+        !trimmedLine.startsWith('//') && 
+        !trimmedLine.startsWith('/*') && 
+        !trimmedLine.endsWith(';') && 
+        !trimmedLine.endsWith('{') && 
+        !trimmedLine.endsWith('}') && 
+        !trimmedLine.startsWith('#') &&
+        !trimmedLine.includes('//') &&
+        !/^\s*$/.test(trimmedLine)) {
+      errors.push(`Line ${lineNum}: Missing semicolon`)
+    }
+    
+    // 检查未定义的变量或函数
+    const undefinedPattern = /\b(gl_\w+|[a-zA-Z_]\w*)\s*\(/g
+    let match
+    while ((match = undefinedPattern.exec(line)) !== null) {
+      const funcName = match[1]
+      // 简单的内置函数检查
+      const builtinFunctions = [
+        'sin', 'cos', 'tan', 'length', 'normalize', 'dot', 'cross', 'mix',
+        'texture2D', 'pow', 'sqrt', 'abs', 'floor', 'ceil', 'clamp', 'step',
+        'smoothstep', 'min', 'max', 'mod', 'fract', 'exp', 'log'
+      ]
+      if (!builtinFunctions.includes(funcName) && !funcName.startsWith('gl_')) {
+        // 这里可以添加更复杂的用户定义函数检查
+      }
+    }
+    
+    // 检查常见拼写错误
+    if (line.includes('unifrom')) {
+      errors.push(`Line ${lineNum}: Did you mean 'uniform'?`)
+    }
+    if (line.includes('varrying')) {
+      errors.push(`Line ${lineNum}: Did you mean 'varying'?`)
+    }
+    if (line.includes('atribute')) {
+      errors.push(`Line ${lineNum}: Did you mean 'attribute'?`)
+    }
+  })
+  
+  // Fragment shader 特定检查
+  if (type === 'fragment') {
+    if (!code.includes('gl_FragColor') && !code.includes('gl_FragData')) {
+      errors.push('Fragment shader should set gl_FragColor or gl_FragData')
+    }
+  }
+  
+  // Vertex shader 特定检查  
+  if (type === 'vertex') {
+    if (!code.includes('gl_Position')) {
+      errors.push('Vertex shader should set gl_Position')
+    }
+  }
+  
+  return errors.length > 0 ? errors.join('\n') : undefined
+}
+
+// 设置编辑器标记错误
+const setEditorErrors = (editor: any, monaco: any, errors: string | undefined) => {
+  if (!editor || !monaco) return
+  
+  const model = editor.getModel()
+  if (!model) return
+  
+  if (errors) {
+    const errorLines = errors.split('\n')
+    const markers = errorLines.map(error => {
+      const lineMatch = error.match(/Line (\d+):/)
+      const lineNumber = lineMatch ? parseInt(lineMatch[1]) : 1
+      
+      return {
+        startLineNumber: lineNumber,
+        startColumn: 1,
+        endLineNumber: lineNumber,
+        endColumn: model.getLineMaxColumn(lineNumber),
+        message: error,
+        severity: monaco.MarkerSeverity.Error
+      }
+    })
+    
+    monaco.editor.setModelMarkers(model, 'glsl-validation', markers)
+  } else {
+    monaco.editor.setModelMarkers(model, 'glsl-validation', [])
+  }
+}
+
 interface ShaderPlaygroundProps {
   width?: number
   height?: number
@@ -283,6 +559,8 @@ function ShaderPlayground({
   const [isEditing, setIsEditing] = useState(true)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [isRunning, setIsRunning] = useState(true)
+  const [shaderErrors, setShaderErrors] = useState<{fragment?: string, vertex?: string}>({})
+  const [editorRefs, setEditorRefs] = useState<{fragment?: any, vertex?: any}>({})
   const [activeTab, setActiveTab] = useState<'fragment' | 'vertex'>('fragment')
   const [viewMode, setViewMode] = useState<'split' | 'editor' | 'fullscreen'>('editor')
   const containerRef = useRef<HTMLDivElement>(null);
@@ -315,14 +593,36 @@ function ShaderPlayground({
   const handleFragmentShaderUpdate = useCallback((value: string | undefined) => {
     if (value !== undefined) {
       setFragmentShader(value)
+      
+      // 验证 shader 错误
+      const errors = validateShaderCode(value, 'fragment')
+      setShaderErrors(prev => ({ ...prev, fragment: errors }))
+      
+      // 如果编辑器引用存在，设置错误标记
+      if (editorRefs.fragment) {
+        loader.init().then((monaco) => {
+          setEditorErrors(editorRefs.fragment, monaco, errors)
+        })
+      }
     }
-  }, [])
+  }, [editorRefs.fragment])
 
   const handleVertexShaderUpdate = useCallback((value: string | undefined) => {
     if (value !== undefined) {
       setVertexShader(value)
+      
+      // 验证 shader 错误
+      const errors = validateShaderCode(value, 'vertex')
+      setShaderErrors(prev => ({ ...prev, vertex: errors }))
+      
+      // 如果编辑器引用存在，设置错误标记
+      if (editorRefs.vertex) {
+        loader.init().then((monaco) => {
+          setEditorErrors(editorRefs.vertex, monaco, errors)
+        })
+      }
     }
-  }, [])
+  }, [editorRefs.vertex])
 
   const resetShaders = useCallback(() => {
     setFragmentShader(defaultFragmentShader)
@@ -524,11 +824,24 @@ function ShaderPlayground({
                           </div>
                         </div>
                         <div className="border rounded-lg overflow-hidden">
+                          {shaderErrors.fragment && (
+                            <div className="bg-red-50 border-b border-red-200 p-2 text-sm text-red-700">
+                              <div className="font-medium mb-1">GLSL Errors:</div>
+                              <pre className="whitespace-pre-wrap">{shaderErrors.fragment}</pre>
+                            </div>
+                          )}
                           <Editor
                             height="400px"
                             language="glsl"
                             value={fragmentShader}
                             onChange={handleFragmentShaderUpdate}
+                            onMount={(editor, monaco) => {
+                              setEditorRefs(prev => ({ ...prev, fragment: editor }))
+                              // 初始验证
+                              const errors = validateShaderCode(fragmentShader, 'fragment')
+                              setShaderErrors(prev => ({ ...prev, fragment: errors }))
+                              setEditorErrors(editor, monaco, errors)
+                            }}
                             theme={isDarkMode ? 'vs-dark' : 'light'}
                             options={{
                               minimap: { enabled: false },
@@ -539,6 +852,23 @@ function ShaderPlayground({
                               automaticLayout: true,
                               tabSize: 2,
                               insertSpaces: true,
+                              // Enhanced GLSL editing options
+                              quickSuggestions: true,
+                              suggestOnTriggerCharacters: true,
+                              acceptSuggestionOnEnter: 'on',
+                              parameterHints: { enabled: true },
+                              hover: { enabled: true },
+                              autoIndent: 'advanced',
+                              formatOnType: true,
+                              formatOnPaste: true,
+                              folding: true,
+                              foldingStrategy: 'indentation',
+                              showFoldingControls: 'always',
+                              matchBrackets: 'always',
+                              renderLineHighlight: 'all',
+                              cursorBlinking: 'smooth',
+                              smoothScrolling: true,
+                              mouseWheelScrollSensitivity: 2
                             }}
                           />
                         </div>
@@ -554,11 +884,24 @@ function ShaderPlayground({
                           </div>
                         </div>
                         <div className="border rounded-lg overflow-hidden">
+                          {shaderErrors.vertex && (
+                            <div className="bg-red-50 border-b border-red-200 p-2 text-sm text-red-700">
+                              <div className="font-medium mb-1">GLSL Errors:</div>
+                              <pre className="whitespace-pre-wrap">{shaderErrors.vertex}</pre>
+                            </div>
+                          )}
                           <Editor
                             height="400px"
                             language="glsl"
                             value={vertexShader}
                             onChange={handleVertexShaderUpdate}
+                            onMount={(editor, monaco) => {
+                              setEditorRefs(prev => ({ ...prev, vertex: editor }))
+                              // 初始验证
+                              const errors = validateShaderCode(vertexShader, 'vertex')
+                              setShaderErrors(prev => ({ ...prev, vertex: errors }))
+                              setEditorErrors(editor, monaco, errors)
+                            }}
                             theme={isDarkMode ? 'vs-dark' : 'light'}
                             options={{
                               minimap: { enabled: false },
@@ -569,6 +912,23 @@ function ShaderPlayground({
                               automaticLayout: true,
                               tabSize: 2,
                               insertSpaces: true,
+                              // Enhanced GLSL editing options
+                              quickSuggestions: true,
+                              suggestOnTriggerCharacters: true,
+                              acceptSuggestionOnEnter: 'on',
+                              parameterHints: { enabled: true },
+                              hover: { enabled: true },
+                              autoIndent: 'advanced',
+                              formatOnType: true,
+                              formatOnPaste: true,
+                              folding: true,
+                              foldingStrategy: 'indentation',
+                              showFoldingControls: 'always',
+                              matchBrackets: 'always',
+                              renderLineHighlight: 'all',
+                              cursorBlinking: 'smooth',
+                              smoothScrolling: true,
+                              mouseWheelScrollSensitivity: 2
                             }}
                           />
                         </div>
