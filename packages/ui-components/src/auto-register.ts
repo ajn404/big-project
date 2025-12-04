@@ -91,5 +91,6 @@ export const CATEGORIES = {
   LAYOUT: '布局组件' as ComponentCategory,
   MEDIA: '媒体组件' as ComponentCategory,
   ALERT: '提示组件' as ComponentCategory,
+  CREATIVE: '创意编程' as ComponentCategory,
   OTHER: '其他' as ComponentCategory,
 }

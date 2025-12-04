@@ -12,6 +12,7 @@ export * from './three'
 
 // Future component categories (uncomment when components are added):
 export * from './charts'
+export * from './creative/collection'
 // export * from './forms'
 // export * from './layout'
 // export * from './media'

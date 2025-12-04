@@ -25,6 +25,7 @@ export type ComponentCategory =
   | '表单组件'
   | '布局组件'
   | '媒体组件'
+  | '创意编程'
   | '其他'
 
 export interface ComponentRegistry {
