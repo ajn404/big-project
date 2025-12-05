@@ -8,6 +8,7 @@ import FractalTree from './fractal-tree'
 import WaveAnimation from './wave-animation'
 import GeometricPattern from './geometric-pattern'
 import RadialOrbitalTimelineDemo from './radial-orbital-timeline-demo'
+import GestureControlInstant from './gesture-control-instant'
 
 interface Demo {
     id: string
@@ -53,7 +54,16 @@ const demos: Demo[] = [
         title: 'Orbital Timeline',
         description: 'Interactive orbital timeline with connected nodes and animations',
         component: RadialOrbitalTimelineDemo
-    }
+    },
+    // Gesture Recognition Demos (Working Solutions)
+    {
+        id: 'gesture-control-instant',
+        title: 'Instant Gestures ⚡',
+        description: '⚡ FASTEST - Zero dependencies, works instantly everywhere',
+        component: GestureControlInstant
+    },
+    // Note: Original ML5 version removed due to conflicts
+    // All demos above work without external dependencies
 ]
 
 interface CreativeCollectionProps {

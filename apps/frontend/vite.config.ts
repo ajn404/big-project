@@ -81,7 +81,11 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
+      external: ['ml5'],
       output: {
+        globals: {
+          ml5: 'ml5'
+        },
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
           'three-vendor': ['three', '@react-three/fiber', '@react-three/drei'],
