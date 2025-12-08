@@ -136,12 +136,10 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
   }, [open])
 
   const [createPracticeNode, { loading: createLoading }] = useMutation(CREATE_PRACTICE_NODE, {
-    onCompleted: () => onClose(),
     onError: (error) => console.error('创建失败:', error)
   })
 
   const [updatePracticeNode, { loading: updateLoading }] = useMutation(UPDATE_PRACTICE_NODE, {
-    onCompleted: () => onClose(),
     onError: (error) => console.error('更新失败:', error)
   })
 
@@ -176,6 +174,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
           }
         })
       }
+      onClose()  // 在这里手动关闭
     } catch (error) {
       console.error('操作失败:', error)
     }
@@ -219,7 +218,6 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
     }))
   }
 
-  // 处理 ESC 键 - 当编辑器全屏时阻止关闭 Dialog
   const handleEscapeKeyDown = (e: KeyboardEvent) => {
     e.preventDefault()
   }
@@ -235,7 +233,12 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
           <DialogDescription>美好的一天开始了🙂</DialogDescription>
         </DialogHeader>
         <div className="p-6 pt-0">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onClick={(e) => {
+            const target = e.target as HTMLElement
+            if (target.tagName === 'BUTTON' && !(target as HTMLButtonElement).type) {
+              e.preventDefault()
+            }
+          }} className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Left Column - Form Fields */}
               <div className="space-y-4">
@@ -442,7 +445,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
               <Button type="button" variant="outline" onClick={onClose}>
                 取消
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" disabled={loading} onClick={handleSubmit}>
                 <Save className="h-4 w-4 mr-2" />
                 {loading ? '保存中...' : (isEditing ? '更新' : '创建')}
               </Button>

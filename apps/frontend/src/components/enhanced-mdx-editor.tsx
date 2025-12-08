@@ -143,12 +143,8 @@ export function EnhancedMDXEditor({
   // 处理全屏模式的键盘事件
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // ESC 键退出全屏，但阻止事件传播避免关闭父对话框
       if (e.key === 'Escape' && isFullscreen) {
-        e.preventDefault()
-        e.stopPropagation()
         setIsFullscreen(false)
-        onFullscreenChange?.(false)
       }
       // F11 键切换全屏
       if (e.key === 'F11') {
@@ -158,7 +154,7 @@ export function EnhancedMDXEditor({
     }
 
     if (isFullscreen) {
-      document.addEventListener('keydown', handleKeyDown, { capture: true })
+      document.addEventListener('keydown', handleKeyDown)
       // 防止页面滚动
       document.body.style.overflow = 'hidden'
     } else {
@@ -166,7 +162,7 @@ export function EnhancedMDXEditor({
     }
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown, { capture: true })
+      document.removeEventListener('keydown', handleKeyDown)
       document.body.style.overflow = ''
     }
   }, [isFullscreen])
@@ -236,7 +232,6 @@ export function EnhancedMDXEditor({
         description: '代码沙箱',
         category: '代码块',
         template: `:::sandbox
-const {createElement} = React;
 return createElement(
     'h1',
     { className: 'greeting' },

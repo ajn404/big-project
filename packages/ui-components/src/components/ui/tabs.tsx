@@ -43,7 +43,7 @@ const TabsTrigger = React.forwardRef<
   }
 >(({ className, value, ...props }, ref) => {
   const context = React.useContext(TabsContext)
-  
+
   return (
     <button
       ref={ref}
@@ -55,6 +55,7 @@ const TabsTrigger = React.forwardRef<
         className
       )}
       onClick={() => context.onValueChange?.(value)}
+      type="button"
       {...props}
     />
   )
@@ -68,9 +69,9 @@ const TabsContent = React.forwardRef<
   }
 >(({ className, value, ...props }, ref) => {
   const context = React.useContext(TabsContext)
-  
+
   if (context.value !== value) return null
-  
+
   return (
     <div
       ref={ref}

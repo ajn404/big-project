@@ -13,7 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@work
 import { Badge } from '@workspace/ui-components'
 import { Button } from '@workspace/ui-components'
 import { Alert, AlertDescription } from '@workspace/ui-components'
-import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Play, Eye, EyeOff } from 'lucide-react'
+import { CodeSandbox } from '@workspace/ui-components'
+import { Code, Info, AlertTriangle, CheckCircle, Copy, ExternalLink, Eye, EyeOff } from 'lucide-react'
 import { ComponentRenderer } from './component-renderer'
 import { generateHeadingId } from '@/lib/heading-utils'
 import { ImageProvider, useImageContext } from '@/contexts/image-context'
@@ -101,94 +102,20 @@ function MDXImage({ src, alt, ...props }: any) {
   )
 }
 
-// 代码沙箱组件
-const CodeSandbox = ({ code }: { code: string }) => {
-  const [result, setResult] = React.useState<JSX.Element | null>(null)
-  const [error, setError] = React.useState<string | null>(null)
-
-  const executeCode = () => {
-    try {
-      setError(null)
-      
-      // 创建一个安全的沙箱环境
-      const { useState, useEffect, useMemo, useCallback } = React
-      
-      // 创建函数体，提供React hooks
-      const functionBody = `
-        const React = arguments[0];
-        const { useState, useEffect, useMemo, useCallback } = arguments[1];
-        
-        ${code}
-      `
-      console.log(code,'functionBody')
-      // 执行代码
-      const ComponentFunction = new Function(functionBody)
-      const Component = ComponentFunction(React, { useState, useEffect, useMemo, useCallback })
-      
-      if (React.isValidElement(Component)) {
-        setResult(Component)
-      } else {
-        setError('代码必须返回一个有效的React元素')
-      }
-    } catch (err: any) {
-      setError(err.message || '代码执行出错')
-    }
-  }
-
-  React.useEffect(() => {
-    executeCode()
-  }, [code])
-
+// 代码沙箱组件 - 现在使用新的CodeSandbox组件
+const MDXCodeSandbox = ({ code }: { code: string }) => {
   return (
-    <div className="border border-border rounded-lg overflow-hidden my-6">
-      <div className="bg-muted px-4 py-2 border-b border-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Play className="h-4 w-4" />
-          <span className="font-medium text-sm">代码沙箱</span>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={executeCode}
-          className="h-6 px-2"
-        >
-          <Play className="h-3 w-3 mr-1" />
-          运行
-        </Button>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-        {/* 代码区域 */}
-        <div className="border-r border-border">
-          <div className="bg-muted/50 px-3 py-1 text-xs text-muted-foreground border-b border-border">
-            代码编辑器
-          </div>
-          <pre className="p-4 text-sm font-mono bg-background overflow-x-auto max-h-64">
-            <code>{code}</code>
-          </pre>
-        </div>
-        
-        {/* 渲染结果 */}
-        <div>
-          <div className="bg-muted/50 px-3 py-1 text-xs text-muted-foreground border-b border-border">
-            渲染结果
-          </div>
-          <div className="p-4 min-h-32">
-            {error ? (
-              <Alert className="border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="text-red-700 dark:text-red-300">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            ) : result ? (
-              <div className="space-y-4">{result}</div>
-            ) : (
-              <div className="text-muted-foreground text-sm">等待代码执行...</div>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="my-6">
+      <CodeSandbox 
+        initialCode={code}
+        language="jsx"
+        height={500}
+        showEditor={true}
+        showPreview={true}
+        allowFullscreen={true}
+        enableConsole={true}
+        theme="auto"
+      />
     </div>
   )
 }
@@ -687,7 +614,7 @@ const customComponents = {
         // 代码沙箱组件
         return (
           <div className="my-6">
-            <CodeSandbox code={content} />
+            <MDXCodeSandbox code={content} />
           </div>
         )
       

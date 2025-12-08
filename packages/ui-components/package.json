@@ -60,6 +60,7 @@
     "lucide-react": "^0.294.0",
     "monaco-editor": "^0.44.0",
     "motion": "^12.23.24",
+    "react-pageflip": "^2.0.3",
     "tailwind-merge": "^2.6.0",
     "typescript": "^5.9.3"
   }
