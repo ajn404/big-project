@@ -8,7 +8,12 @@ import '@tensorflow/tfjs-backend-webgl'
 let detectorPromise: Promise<handPoseDetection.HandDetector> | null = null
 
 const createDetector = async (
-  options: { modelComplexity?: 0 | 1; maxHands?: number }
+  options: { 
+    modelComplexity?: 0 | 1; 
+    maxHands?: number; 
+    detectionConfidence?: number; 
+    trackingConfidence?: number 
+  }
 ): Promise<handPoseDetection.HandDetector> => {
   await tf.setBackend('webgl')
 
@@ -47,7 +52,12 @@ export interface UseHandPoseReturn {
 
 // --- The Hook ---
 export const useHandPose = (options: HandPoseOptions = {}): UseHandPoseReturn => {
-  const { maxHands = 2, modelComplexity = 1 } = options
+  const { 
+    maxHands = 2, 
+    modelComplexity = 1, 
+    detectionConfidence = 0.5, 
+    trackingConfidence = 0.5 
+  } = options
 
   const [hands, setHands] = useState<Hand[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -113,7 +123,12 @@ export const useHandPose = (options: HandPoseOptions = {}): UseHandPoseReturn =>
       setIsLoading(true)
 
       if (!detectorPromise) {
-        detectorPromise = createDetector({ modelComplexity, maxHands })
+        detectorPromise = createDetector({ 
+          modelComplexity, 
+          maxHands, 
+          detectionConfidence, 
+          trackingConfidence 
+        })
       }
       
       detectorRef.current = await detectorPromise
@@ -124,7 +139,7 @@ export const useHandPose = (options: HandPoseOptions = {}): UseHandPoseReturn =>
     } finally {
       setIsLoading(false)
     }
-  }, [maxHands, modelComplexity])
+  }, [maxHands, modelComplexity, detectionConfidence, trackingConfidence])
 
   const setupVideo = useCallback(async () => {
     try {

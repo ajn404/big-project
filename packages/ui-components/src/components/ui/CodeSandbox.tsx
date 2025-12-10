@@ -757,9 +757,9 @@ return <ExampleComponent />`,
   }, [onError])
 
   const editorElement = showEditor && (
-    <div className="flex-1 min-h-0">
-      <Card className="h-full">
-        <CardHeader className="pb-3">
+    <div className="flex-1 min-h-0 max-h-full overflow-hidden">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Code2 className="h-4 w-4" />
@@ -793,10 +793,10 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6">
+        <CardContent className="flex-1 pb-6 min-h-0 overflow-hidden">
           {showCSS ? (
-            <Tabs value={activeEditorTab} className="h-full">
-              <TabsContent value="js" className="h-full">
+            <Tabs value={activeEditorTab} className="h-full flex flex-col">
+              <TabsContent value="js" className="flex-1 min-h-0">
                 <div className="border rounded-lg overflow-hidden h-full">
                   <Editor
                     height="100%"
@@ -831,7 +831,7 @@ return <ExampleComponent />`,
                   />
                 </div>
               </TabsContent>
-              <TabsContent value="css" className="h-full">
+              <TabsContent value="css" className="flex-1 min-h-0">
                 <div className="border rounded-lg overflow-hidden h-full">
                   <Editor
                     height="100%"
@@ -908,9 +908,9 @@ return <ExampleComponent />`,
   )
 
   const previewElement = showPreview && (
-    <div className="flex-1 min-h-0">
-      <Card className="h-full">
-        <CardHeader className="pb-3">
+    <div className="flex-1 min-h-0 max-h-full overflow-hidden">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Eye className="h-4 w-4" />
@@ -945,10 +945,10 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6">
+        <CardContent className="flex-1 pb-6 min-h-0 overflow-hidden">
           {enableConsole ? (
-            <Tabs value={activeTab} className="h-full">
-              <TabsContent value="preview" className="h-full">
+            <Tabs value={activeTab} className="h-full flex flex-col">
+              <TabsContent value="preview" className="flex-1 min-h-0">
                 <div className="border rounded-lg p-4 h-full overflow-auto bg-background">
                   {isRunning ? (
                     <CodeSandboxErrorBoundary onError={handleError}>
@@ -972,7 +972,7 @@ return <ExampleComponent />`,
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="console" className="h-full">
+              <TabsContent value="console" className="flex-1 min-h-0">
                 <Console messages={consoleMessages} onClear={clearConsole} />
               </TabsContent>
             </Tabs>
@@ -1048,7 +1048,7 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div 
             className={cn(
               "flex gap-4",
@@ -1056,7 +1056,10 @@ return <ExampleComponent />`,
               viewMode === 'editor' && "flex-col",
               viewMode === 'preview' && "flex-col"
             )}
-            style={{ height: typeof height === 'number' ? `${height}px` : height }}
+            style={{ 
+              height: typeof height === 'number' ? `${height - 120}px` : `calc(${height} - 120px)`,
+              maxHeight: typeof height === 'number' ? `${height - 120}px` : `calc(${height} - 120px)`
+            }}
           >
             {viewMode !== 'preview' && editorElement}
             {viewMode !== 'editor' && previewElement}
