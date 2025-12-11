@@ -1,5 +1,7 @@
 # 🚀 全栈学习实践平台
 
+![](./screenshot/output.gif)
+
 一个现代化的全栈学习平台，基于 **pnpm monorepo** 架构，提供完整的文章管理、MDX编辑和交互式学习体验。支持丰富的组件插入功能和实时预览，让技术学习更加高效和有趣。
 
 ![技术栈](https://img.shields.io/badge/NestJS-GraphQL-red) ![前端框架](https://img.shields.io/badge/React-TypeScript-blue) ![UI组件](https://img.shields.io/badge/ShadCN-TailwindCSS-green) ![3D渲染](https://img.shields.io/badge/Three.js-WebGL-orange)

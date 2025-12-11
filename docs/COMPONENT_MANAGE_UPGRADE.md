@@ -185,3 +185,8 @@ const mapCategoryFromRegistered = (regCategory: string): ComponentCategory => {
    - 标签: `['shader', 'webgl', '3d']`
 
 现在添加组件变得前所未有的简单和准确！🎉
+
+
+
+
+
