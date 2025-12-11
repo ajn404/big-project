@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
 import { AssetSelectorDialog } from './asset-selector-dialog'
+import { ComponentSelectorDialog } from './component-selector-dialog'
 import { AssetType, Asset } from '@/types/asset'
 import ComponentManager from '@/utils/component-manager'
 
@@ -49,7 +50,7 @@ export function EnhancedMDXEditor({
   onFullscreenChange
 }: EnhancedMDXEditorProps) {
   const [isPreview, setIsPreview] = useState(false)
-  const [showComponentMenu, setShowComponentMenu] = useState(false)
+  const [showComponentDialog, setShowComponentDialog] = useState(false)
   const [showAssetSelector, setShowAssetSelector] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -252,15 +253,6 @@ return createElement(
     setComponentTemplates([...staticTemplates, ...registeredComponents])
   }, [])
 
-  // 按分类分组组件
-  const groupedTemplates = componentTemplates.reduce((groups, template) => {
-    const category = template.category || '其他'
-    if (!groups[category]) {
-      groups[category] = []
-    }
-    groups[category].push(template)
-    return groups
-  }, {} as Record<string, typeof componentTemplates>)
 
   // 工具栏操作
   const insertText = (before: string, after: string = '', defaultText: string = '') => {
@@ -413,7 +405,7 @@ return createElement(
         {
           icon: Component,
           label: '插入组件',
-          action: () => setShowComponentMenu(!showComponentMenu)
+          action: () => setShowComponentDialog(true)
         },
       ]
     }
@@ -524,7 +516,7 @@ return createElement(
                 return (
                   <Button
                     key={buttonIndex}
-                    variant={button.label === '插入组件' && showComponentMenu ? "default" : "ghost"}
+                    variant={button.label === '插入组件' && showComponentDialog ? "default" : "ghost"}
                     size="sm"
                     disabled={button.disabled}
                     onClick={(e) => {
@@ -591,70 +583,6 @@ return createElement(
         </div>
       </div>
 
-      {/* 组件选择菜单 */}
-      {showComponentMenu && (
-        <div className="bg-background border-b border-border p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-sm font-medium">选择要插入的组件：</h4>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowComponentMenu(false)
-              }}
-            >
-              ✕
-            </Button>
-          </div>
-
-          {/* 分组显示组件 */}
-          <div className="space-y-4 max-h-64 overflow-y-auto">
-            {Object.entries(groupedTemplates).map(([category, templates]) => (
-              <div key={category}>
-                <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                  {category}
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                  {templates.map((component, index) => (
-                    <Button
-                      key={`${category}-${index}`}
-                      variant="outline"
-                      size="sm"
-                      className="h-auto p-3 flex flex-col items-start text-left hover:bg-primary/5 hover:border-primary/20 transition-all"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        insertAtNewLine(component.template)
-                        setShowComponentMenu(false)
-                      }}
-                      title={component.description}
-                    >
-                      <div className="font-medium text-sm max-w-full text-ellipsis overflow-auto">{component.name}</div>
-                      <div className="text-xs text-muted-foreground mt-1 line-clamp-2 max-w-full text-ellipsis overflow-auto">
-                        {component.description}
-                      </div>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded border border-blue-200 dark:border-blue-800">
-            <div className="text-xs text-blue-700 dark:text-blue-300">
-              <strong>💡 提示：</strong>
-              <ul className="mt-1 space-y-1 list-disc list-inside">
-                <li>React组件来自注册的组件库</li>
-                <li>可以在组件管理页面添加新组件</li>
-                <li>所有组件支持实时渲染和交互</li>
-                <li>组件模板会自动同步到编辑器</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 编辑器区域 */}
       <div
@@ -791,6 +719,14 @@ return createElement(
           </div>
         </div>
       </div>
+
+      {/* 组件选择器对话框 */}
+      <ComponentSelectorDialog
+        open={showComponentDialog}
+        onOpenChange={setShowComponentDialog}
+        onSelect={(template) => insertAtNewLine(template)}
+        componentTemplates={componentTemplates}
+      />
 
       {/* 资源选择器对话框 */}
       <AssetSelectorDialog

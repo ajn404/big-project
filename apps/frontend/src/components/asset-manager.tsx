@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { 
   Button, 
@@ -83,6 +83,8 @@ export function AssetManager({
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [debouncedSearch] = useDebounce(search, 300);
+  const [pastedFiles, setPastedFiles] = useState<File[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 图片预览状态
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -118,6 +120,86 @@ export function AssetManager({
   });
 
   const { confirm, ConfirmDialog } = useConfirm();
+
+  // 处理粘贴上传
+  const uploadPastedFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (currentFolderId) {
+      formData.append('folderId', currentFolderId);
+    }
+
+    try {
+      const response = await fetch('/api/assets/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('粘贴上传失败:', error);
+      alert('粘贴上传失败，请重试');
+    }
+  };
+
+  const handlePaste = useCallback(async (event: ClipboardEvent) => {
+    const items = event.clipboardData?.items;
+    console.log(items)
+    if (!items) return;
+
+    const imageFiles: File[] = [];
+    
+    // 检查剪贴板中的图片
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          // 直接使用原始文件，浏览器会自动生成名称
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      // 如果允许的类型包含图片或者没有类型限制，则处理粘贴
+      if (!allowedTypes || allowedTypes.includes(AssetType.IMAGE)) {
+        try {
+          const uploadPromises = imageFiles.map(file => uploadPastedFile(file));
+          await Promise.all(uploadPromises);
+          
+          // 刷新资源列表
+          refetch();
+          
+          // 显示成功消息
+          console.log(`成功粘贴上传了 ${imageFiles.length} 张图片！`);
+          // 你可以在这里添加更好的用户反馈，比如 toast 通知
+        } catch (error) {
+          console.error('粘贴上传失败:', error);
+        }
+      }
+    }
+  }, [allowedTypes, currentFolderId, refetch]);
+
+  // 添加粘贴事件监听
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // 使容器可聚焦
+    container.setAttribute('tabIndex', '-1');
+    container.focus();
+
+    container.addEventListener('paste', handlePaste);
+    
+    return () => {
+      container.removeEventListener('paste', handlePaste);
+    };
+  }, [handlePaste]);
 
   const handleDelete = useCallback(async (id: string) => {
     const confirmed = await confirm({
@@ -206,7 +288,16 @@ export function AssetManager({
 
   return (
     <>
-    <div className="h-[calc(100vh-500px)] grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <div 
+      ref={containerRef}
+      className="h-[calc(100vh-500px)] grid grid-cols-1 lg:grid-cols-4 gap-6 focus:outline-none"
+      onKeyDown={(e) => {
+        // 阻止默认的键盘事件，确保粘贴事件正常工作
+        if (e.ctrlKey && e.key === 'v') {
+          e.preventDefault();
+        }
+      }}
+    >
       {/* 文件夹侧边栏 */}
       <div className="lg:col-span-1 sticky top-0 ">
         <FolderManager
@@ -249,29 +340,35 @@ export function AssetManager({
           </SelectContent>
         </Select>
 
-        <Dialog open={showUpload} onOpenChange={setShowUpload}>
-          <DialogTrigger asChild>
-            <Button>
-              <Upload className="w-4 h-4 mr-2" />
-              上传资源
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={showUpload} onOpenChange={setShowUpload}>
+            <DialogTrigger asChild>
+              <Button>
+                <Upload className="w-4 h-4 mr-2" />
+                上传资源
+              </Button>
+            </DialogTrigger>
             <DialogContent className="max-w-6xl max-h-[80vh] ">
-            <DialogHeader>
-              <DialogTitle>上传资源</DialogTitle>
-            </DialogHeader>
-            <AssetUpload
-              onSuccess={() => {
-                setShowUpload(false);
-                refetch();
-                // 强制刷新页面来更新文件夹计数
-                // window.location.reload();
-              }}
-              allowedTypes={allowedTypes}
-              defaultFolderId={currentFolderId}
-            />
-          </DialogContent>
-        </Dialog>
+              <DialogHeader>
+                <DialogTitle>上传资源</DialogTitle>
+              </DialogHeader>
+              <AssetUpload
+                onSuccess={() => {
+                  setShowUpload(false);
+                  refetch();
+                  // 强制刷新页面来更新文件夹计数
+                  // window.location.reload();
+                }}
+                allowedTypes={allowedTypes}
+                defaultFolderId={currentFolderId}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <div className="flex items-center text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded">
+            <span>💡 提示：按 Ctrl+V 可粘贴图片</span>
+          </div>
+        </div>
         </div>
 
         {/* 资源网格 - 可滚动区域 */}

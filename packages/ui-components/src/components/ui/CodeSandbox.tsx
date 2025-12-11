@@ -419,8 +419,8 @@ const Console: React.FC<{
   onClear: () => void
 }> = ({ messages, onClear }) => {
   return (
-    <div className="border rounded-lg bg-black text-green-400 font-mono text-xs">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700">
+    <div className="border rounded-lg bg-black text-green-400 font-mono text-xs h-full flex flex-col">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 flex-shrink-0">
         <span className="font-medium">控制台</span>
         <Button
           variant="ghost"
@@ -431,7 +431,7 @@ const Console: React.FC<{
           清空
         </Button>
       </div>
-      <div className="max-h-40 overflow-y-auto p-3 space-y-1">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {messages.length === 0 ? (
           <div className="text-gray-500">控制台输出将显示在这里...</div>
         ) : (
@@ -757,9 +757,9 @@ return <ExampleComponent />`,
   }, [onError])
 
   const editorElement = showEditor && (
-    <div className="flex-1 min-h-0">
-      <Card className="h-full">
-        <CardHeader className="pb-3">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Code2 className="h-4 w-4" />
@@ -793,9 +793,9 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6">
+        <CardContent className="flex-1 pb-6 overflow-hidden flex flex-col">
           {showCSS ? (
-            <Tabs value={activeEditorTab} className="h-full">
+            <Tabs value={activeEditorTab} className="h-full flex flex-col">
               <TabsContent value="js" className="h-full">
                 <div className="border rounded-lg overflow-hidden h-full">
                   <Editor
@@ -908,9 +908,9 @@ return <ExampleComponent />`,
   )
 
   const previewElement = showPreview && (
-    <div className="flex-1 min-h-0">
-      <Card className="h-full">
-        <CardHeader className="pb-3">
+    <div className="flex-1 min-h-0 flex flex-col">
+      <Card className="h-full flex flex-col">
+        <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
               <Eye className="h-4 w-4" />
@@ -945,9 +945,9 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent className="h-full pb-6">
+        <CardContent className="flex-1 pb-6 overflow-hidden flex flex-col">
           {enableConsole ? (
-            <Tabs value={activeTab} className="h-full">
+            <Tabs value={activeTab} className="h-full flex flex-col">
               <TabsContent value="preview" className="h-full">
                 <div className="border rounded-lg p-4 h-full overflow-auto bg-background">
                   {isRunning ? (
@@ -1006,9 +1006,13 @@ return <ExampleComponent />`,
   )
 
   const mainContent = (
-    <div className={cn("w-full", className)} ref={containerRef}>
-      <Card>
-        <CardHeader className="pb-4">
+    <div 
+      className={cn("w-full flex flex-col", className)} 
+      ref={containerRef}
+      style={{ height: typeof height === 'number' ? `${height}px` : height }}
+    >
+      <Card className="flex flex-col h-full">
+        <CardHeader className="pb-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
@@ -1048,15 +1052,14 @@ return <ExampleComponent />`,
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-hidden">
           <div 
             className={cn(
-              "flex gap-4",
+              "flex gap-4 h-full",
               viewMode === 'split' && "flex-col lg:flex-row",
               viewMode === 'editor' && "flex-col",
               viewMode === 'preview' && "flex-col"
             )}
-            style={{ height: typeof height === 'number' ? `${height}px` : height }}
           >
             {viewMode !== 'preview' && editorElement}
             {viewMode !== 'editor' && previewElement}

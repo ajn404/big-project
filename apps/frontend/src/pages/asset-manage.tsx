@@ -1,5 +1,5 @@
 import { AssetManager } from '@/components/asset-manager';
-import { Card, CardContent, CardHeader, CardTitle, Button } from '@workspace/ui-components';
+import { Card, CardContent, CardHeader, CardTitle, Button, CardDescription } from '@workspace/ui-components';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_ASSET_STATS } from '@/lib/graphql/asset-queries';
 import { GET_FOLDER_PATH, MOVE_ASSET_TO_FOLDER } from '@/lib/graphql/folder-queries';
@@ -136,6 +136,7 @@ export default function AssetManagePage() {
       <Card>
         <CardHeader>
           <CardTitle>文件库</CardTitle>
+          <CardDescription>右键操作，可拖动至文件夹</CardDescription>
         </CardHeader>
         <CardContent>
           <AssetManager 
