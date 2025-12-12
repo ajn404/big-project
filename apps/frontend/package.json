@@ -16,6 +16,7 @@
   "dependencies": {
     "@apollo/client": "^3.8.7",
     "@learning-practice/shared-types": "workspace:*",
+    "@lumaai/luma-web": "^0.2.2",
     "@mdx-js/rollup": "^3.0.0",
     "@monaco-editor/react": "^4.7.0",
     "monaco-editor": "^0.44.0",
