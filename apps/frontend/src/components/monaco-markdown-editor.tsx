@@ -307,11 +307,14 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
       onSelectionChange?.(e.selection);
     });
 
-    // 监听内容变化
-    editor.onDidChangeModelContent(() => {
-      const currentValue = editor.getValue();
-      onChange(currentValue);
-    });
+    // 监听内容变化 - 已通过 Editor 组件的 onChange prop 处理
+    // editor.onDidChangeModelContent(() => {
+    //   const currentValue = editor.getValue();
+    //   // 确保内容变化时立即通知父组件
+    //   if (currentValue !== value) {
+    //     onChange(currentValue);
+    //   }
+    // });
 
     // 添加自定义代码片段
     monaco.languages.registerCompletionItemProvider('markdown', {
@@ -371,8 +374,11 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
       }
     });
 
-    // 如果有占位符且内容为空，显示占位符
-    if (!value && placeholder) {
+    // 设置初始内容
+    if (value) {
+      editor.setValue(value);
+    } else if (placeholder) {
+      // 如果有占位符且内容为空，显示占位符
       editor.setValue(`<!-- ${placeholder} -->`);
       editor.setPosition({ lineNumber: 1, column: 1 });
       editor.getModel()?.pushEditOperations([], [{
@@ -385,6 +391,22 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
     // 调用外部 onMount 回调
     onMount?.(editor, monaco);
   }, [onChange, onMount, onSelectionChange, placeholder, value]);
+
+  // 同步外部 value 到编辑器
+  useEffect(() => {
+    if (editorRef.current) {
+      const currentValue = editorRef.current.getValue();
+      if (value !== currentValue) {
+        // 保存光标位置
+        const position = editorRef.current.getPosition();
+        editorRef.current.setValue(value);
+        // 恢复光标位置
+        if (position) {
+          editorRef.current.setPosition(position);
+        }
+      }
+    }
+  }, [value]);
 
   // 主题切换效果
   useEffect(() => {
@@ -400,6 +422,12 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
         height={height}
         language="markdown"
         value={value}
+        onChange={(newValue) => {
+          // 直接在这里处理内容变化，确保实时响应
+          if (newValue && newValue !== value) {
+            onChange(newValue);
+          }
+        }}
         onMount={handleEditorMount}
         theme={theme === 'dark' ? 'markdown-dark' : 'markdown-light'}
         options={{

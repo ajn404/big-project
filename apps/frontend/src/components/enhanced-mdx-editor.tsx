@@ -445,10 +445,13 @@ return createElement(
   }, [throttledScrollSync, isFullscreen])
 
   // 处理Monaco编辑器内容变化
-  const handleMonacoChange = (newValue: string) => {
-    onChange(newValue)
-    updateUndoRedoState()
-  }
+  const handleMonacoChange = useCallback((newValue: string) => {
+    // 确保内容真正变化时才更新
+    if (newValue !== value) {
+      onChange(newValue)
+      updateUndoRedoState()
+    }
+  }, [value, onChange, updateUndoRedoState])
 
   // 滚动同步已在 handleMonacoMount 中实现
   // const handleEditorScroll = () => {

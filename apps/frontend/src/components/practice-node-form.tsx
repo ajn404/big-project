@@ -56,7 +56,6 @@ const CONTENT_TYPE_OPTIONS = [
 
 export function PracticeNodeForm({ node, categories, tags, open, onClose }: PracticeNodeFormProps) {
   const isEditing = !!node
-  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -433,7 +432,6 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
                       onChange={(value) => handleInputChange('content', value)}
                       placeholder="输入 MDX 内容，支持 Markdown 语法和实时预览..."
                       height="500px"
-                      onFullscreenChange={setIsEditorFullscreen}
                     />
                   </div>
                 )}
