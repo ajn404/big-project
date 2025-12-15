@@ -13,6 +13,7 @@ import { UIComponentModule } from './ui-component/ui-component.module';
 import { AssetModule } from './asset/asset.module';
 import { FolderModule } from './folder/folder.module';
 import { SeedModule } from './database/seeds/seed.module';
+import { AIGatewayModule } from './ai-gateway/ai-gateway.module';
 
 @Module({
   imports: [
@@ -45,6 +46,9 @@ import { SeedModule } from './database/seeds/seed.module';
     UIComponentModule,
     AssetModule,
     FolderModule,
+    
+    // AI 网关模块
+    AIGatewayModule,
     
     // 种子数据模块
     SeedModule,

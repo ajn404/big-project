@@ -20,11 +20,13 @@ import {
   Maximize,
   Minimize,
   Undo,
-  Redo
+  Redo,
+  Bot
 } from 'lucide-react'
 import { MDXRenderer } from './mdx-renderer'
 import { AssetSelectorDialog } from './asset-selector-dialog'
 import { ComponentSelectorDialog } from './component-selector-dialog'
+import { AIAssistantDialog } from './ai-assistant-dialog'
 import { AssetType, Asset } from '@/types/asset'
 import ComponentManager from '@/utils/component-manager'
 
@@ -52,6 +54,7 @@ export function EnhancedMDXEditor({
   const [isPreview, setIsPreview] = useState(false)
   const [showComponentDialog, setShowComponentDialog] = useState(false)
   const [showAssetSelector, setShowAssetSelector] = useState(false)
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
@@ -408,6 +411,16 @@ return createElement(
           action: () => setShowComponentDialog(true)
         },
       ]
+    },
+    {
+      group: 'AI助手',
+      buttons: [
+        {
+          icon: Bot,
+          label: 'AI写作助手',
+          action: () => setShowAIAssistant(true)
+        },
+      ]
     }
   ]
 
@@ -496,6 +509,54 @@ return createElement(
   const handleAssetSelect = (asset: Asset) => {
     const markdownText = `![${asset.alt || asset.description || asset.name}](${asset.url})`
     insertAtNewLine(markdownText)
+  }
+
+  // AI 助手相关函数
+  const handleAIContentReplace = (newContent: string) => {
+    // 保存当前状态到历史记录
+    const textarea = textareaRef.current
+    if (textarea) {
+      saveToHistory(value, { 
+        start: textarea.selectionStart, 
+        end: textarea.selectionEnd 
+      })
+    }
+    
+    onChange(newContent)
+    
+    // 重新聚焦到编辑器
+    setTimeout(() => {
+      if (textarea) {
+        textarea.focus()
+        const newPosition = newContent.length
+        textarea.setSelectionRange(newPosition, newPosition)
+      }
+    }, 0)
+  }
+
+  const handleAIContentInsert = (content: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+
+    // 保存当前状态到历史记录
+    saveToHistory(value, { start, end })
+
+    const newText = 
+      value.substring(0, start) + 
+      content + 
+      value.substring(end)
+
+    onChange(newText)
+
+    // 重新聚焦并设置光标位置
+    setTimeout(() => {
+      textarea.focus()
+      const newPosition = start + content.length
+      textarea.setSelectionRange(newPosition, newPosition)
+    }, 0)
   }
 
   return (
@@ -735,6 +796,15 @@ return createElement(
         onSelect={handleAssetSelect}
         allowedTypes={[AssetType.IMAGE]}
         title="选择图片"
+      />
+
+      {/* AI 写作助手对话框 */}
+      <AIAssistantDialog
+        open={showAIAssistant}
+        onOpenChange={setShowAIAssistant}
+        currentContent={value}
+        onContentReplace={handleAIContentReplace}
+        onContentInsert={handleAIContentInsert}
       />
     </div>
   )
