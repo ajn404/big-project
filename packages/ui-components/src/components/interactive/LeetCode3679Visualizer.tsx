@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import * as d3 from 'd3'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
+import { useTheme } from '../../hooks'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Card } from '../ui/card'
@@ -21,6 +22,7 @@ interface SimulationState {
 }
 
 function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps) {
+  const { isDark } = useTheme()
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [state, setState] = useState<SimulationState>({
@@ -321,8 +323,8 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
   }, [state])
 
   return (
-    <div className={`p-6 bg-white rounded-lg border ${className} m-auto max-w-4xl md:max-w-6xl lg:max-w-7xl overflow-auto` }>
-      <h3 className="text-2xl font-bold mb-4 text-gray-800">
+    <div className={`p-6 rounded-lg border ${isDark ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-900 border-gray-200'} ${className} m-auto max-w-4xl md:max-w-6xl lg:max-w-7xl overflow-auto` }>
+      <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
         LeetCode 3679: 使库存平衡的最少丢弃次数
       </h3>
 
@@ -365,7 +367,7 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
         </Button>
         <Button
           onClick={resetSimulation}
-          variant="outline"
+          variant="destructive"
         >
           重置
         </Button>
@@ -440,7 +442,7 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
       </div>
 
       {/* Status */}
-      <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+      <div className={`mb-4 p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'}`}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <strong>当前天数:</strong> {state.currentDay} / {state.arrivals.length}
@@ -467,7 +469,7 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
       <div className="mb-4 w-full">
         <div
           ref={containerRef}
-          className="overflow-x-auto border rounded-lg bg-white"
+          className={`overflow-x-auto border rounded-lg ${isDark ? 'bg-gray-900 border-gray-600' : 'bg-white border-gray-200'}`}
           style={{ maxHeight: '500px' }}
         >
           <svg
@@ -479,7 +481,7 @@ function LeetCode3679Visualizer({ className = "" }: LeetCode3679VisualizerProps)
       </div>
 
       {/* Algorithm Description */}
-      <div className="text-sm text-gray-600 space-y-2">
+      <div className={`text-sm space-y-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
         <p><strong>算法说明:</strong></p>
         <ul className="list-disc list-inside space-y-1">
           <li>物品只能在<strong>到达当天</strong>决定保留或丢弃，一旦决定就不能更改</li>

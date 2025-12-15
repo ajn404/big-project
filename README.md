@@ -161,10 +161,10 @@ pnpm lint
 ```
 
 ### 🌐 **Access URLs | 访问地址**
-- **Frontend | 前端**: http://localhost:3001
+- **Frontend | 前端**: http://localhost:3000
 - **Backend GraphQL | 后端GraphQL**: http://localhost:3001/graphql
-- **Asset Management | 资源管理**: http://localhost:3001/asset-manage
-- **Component Management | 组件管理**: http://localhost:3001/component-manage
+- **Asset Management | 资源管理**: http://localhost:3000/asset-manage
+- **Component Management | 组件管理**: http://localhost:3000/component-manage
 
 
 如果这个项目对你有帮助，请考虑给一个 ⭐ Star！
@@ -405,3 +405,10 @@ Thanks to all contributors and the open source community!
 If this project helps you, please consider giving it a ⭐ Star!
 
 > 注:ai写简单的 ui组件还行，画的还可以，但复杂的 three/编辑器组件会表现不好
+
+
+
+
+
+
+
