@@ -403,3 +403,5 @@ Thanks to all contributors and the open source community!
 **🎯 Make learning more efficient and knowledge more interesting!**
 
 If this project helps you, please consider giving it a ⭐ Star!
+
+> 注:ai写简单的 ui组件还行，画的还可以，但复杂的 three/编辑器组件会表现不好

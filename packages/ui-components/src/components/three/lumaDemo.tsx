@@ -13,7 +13,7 @@ interface LumaDemoProps {
 function LumaDemo({
     width = 800,
     height = 600,
-    splatsUrl = 'https://lumalabs.ai/capture/4da7cf32-865a-4515-8cb9-9dfc574c90c2'
+    splatsUrl = 'https://lumalabs.ai/capture/decb0344-6455-4189-934f-8bd1f6a4fe2e'
 }: LumaDemoProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const rendererRef = useRef<WebGLRenderer>()
@@ -47,45 +47,30 @@ function LumaDemo({
         controlsRef.current = controls
         splatRef.current = new LumaSplatsThree({
             source: splatsUrl,
+            onBeforeRender(renderer, scene, camera, splats) {
+            },
         })
         splatRef.current.onLoad = () => {
-            console.log('loadddd')
+        }
+        splatRef.current.onProgress = e => {
         }
         scene.add(splatRef.current)
         renderer.setAnimationLoop(() => {
             let width = canvas.clientWidth;
             let height = canvas.clientHeight;
-
             if (canvas.width !== width || canvas.height !== height) {
                 camera.aspect = width / height;
                 camera.updateProjectionMatrix();
                 renderer.setSize(width, height, false);
             }
-
             controls.update();
             renderer.render(scene, camera);
         });
         return () => {
-                // controls.dispose()
-                // renderer.dispose()
+            // controls.dispose()
+            // renderer.dispose()
         }
     }, [width, height, splatsUrl])
-
-    // Handle resize
-    useEffect(() => {
-        const handleResize = () => {
-            if (!cameraRef.current || !rendererRef.current) return
-
-            const newWidth = width
-            const newHeight = height
-
-            cameraRef.current.aspect = newWidth / newHeight
-            cameraRef.current.updateProjectionMatrix()
-            rendererRef.current.setSize(newWidth, newHeight, false)
-        }
-        window.addEventListener('resize', handleResize)
-        return () => window.removeEventListener('resize', handleResize)
-    }, [width, height])
 
     return (
         <div className="flex flex-col items-center p-4">

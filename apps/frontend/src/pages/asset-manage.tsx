@@ -9,7 +9,7 @@ import { ChevronRight, Home } from 'lucide-react';
 
 export default function AssetManagePage() {
   const [currentFolderId, setCurrentFolderId] = useState<string | undefined>();
-  
+
   const { data: statsData } = useQuery(GET_ASSET_STATS);
   const stats: AssetStats | undefined = statsData?.assetStats;
 
@@ -102,35 +102,33 @@ export default function AssetManagePage() {
       )}
 
       {/* 面包屑导航 */}
-      {folderPath.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <nav className="flex items-center space-x-2 text-sm">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCurrentFolderId(undefined)}
-                className="p-1 h-auto"
-              >
-                <Home className="w-4 h-4" />
-              </Button>
-              {folderPath.map((folder: any) => (
-                <div key={folder.id} className="flex items-center">
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentFolderId(folder.id)}
-                    className="p-1 h-auto text-gray-600 hover:text-gray-900"
-                  >
-                    {folder.name}
-                  </Button>
-                </div>
-              ))}
-            </nav>
-          </CardContent>
-        </Card>
-      )}
+      <Card >
+        <CardContent className="p-4">
+          <nav className="flex items-center space-x-2 text-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCurrentFolderId(undefined)}
+              className="p-1 h-auto"
+            >
+              <Home className="w-4 h-4" />
+            </Button>
+            {folderPath.map((folder: any) => (
+              <div key={folder.id} className="flex items-center">
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentFolderId(folder.id)}
+                  className="p-1 h-auto text-gray-600 hover:text-gray-900"
+                >
+                  {folder.name}
+                </Button>
+              </div>
+            ))}
+          </nav>
+        </CardContent>
+      </Card>
 
       {/* 资源管理器 */}
       <Card>
@@ -139,7 +137,7 @@ export default function AssetManagePage() {
           <CardDescription>右键操作，可拖动至文件夹</CardDescription>
         </CardHeader>
         <CardContent>
-          <AssetManager 
+          <AssetManager
             currentFolderId={currentFolderId}
             onFolderChange={setCurrentFolderId}
             onMoveAsset={handleMoveAsset}
