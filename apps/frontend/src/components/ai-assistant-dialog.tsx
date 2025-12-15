@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, Button, Textarea, Badge, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@workspace/ui-components';
+import { Dialog, Button, Textarea, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@workspace/ui-components';
 import { Bot, Sparkles, FileText, Loader2, Copy, Check } from 'lucide-react';
 import { useAIWritingAssist, useAISummarize } from '@/hooks/useAI';
 

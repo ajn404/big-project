@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Textarea, Button, Badge } from '@workspace/ui-components'
+import { Button, Badge } from '@workspace/ui-components'
 import {
   Bold,
   Italic,
@@ -27,8 +27,10 @@ import { MDXRenderer } from './mdx-renderer'
 import { AssetSelectorDialog } from './asset-selector-dialog'
 import { ComponentSelectorDialog } from './component-selector-dialog'
 import { AIAssistantDialog } from './ai-assistant-dialog'
+import MonacoMarkdownEditor, { MonacoEditorHandle } from './monaco-markdown-editor'
 import { AssetType, Asset } from '@/types/asset'
 import ComponentManager from '@/utils/component-manager'
+import { useTheme } from '@/components/theme-provider'
 
 interface EnhancedMDXEditorProps {
   value: string
@@ -38,11 +40,11 @@ interface EnhancedMDXEditorProps {
   onFullscreenChange?: (isFullscreen: boolean) => void
 }
 
-// 历史记录类型
-interface HistoryState {
-  content: string
-  selection: { start: number; end: number }
-}
+// Monaco Editor 集成后不再需要历史记录类型
+// interface HistoryState {
+//   content: string
+//   selection: { start: number; end: number }
+// }
 
 export function EnhancedMDXEditor({
   value,
@@ -55,15 +57,19 @@ export function EnhancedMDXEditor({
   const [showComponentDialog, setShowComponentDialog] = useState(false)
   const [showAssetSelector, setShowAssetSelector] = useState(false)
   const [showAIAssistant, setShowAIAssistant] = useState(false)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const monacoRef = useRef<MonacoEditorHandle>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
+  const { theme } = useTheme()
+  
+  // 滚动同步优化相关 refs
+  const lastScrollTimeRef = useRef<number>(0)
+  const animationFrameRef = useRef<number>()
 
-  // 撤销/重做历史记录
-  const [history, setHistory] = useState<HistoryState[]>([{ content: value, selection: { start: 0, end: 0 } }])
-  const [historyIndex, setHistoryIndex] = useState(0)
-  const isUndoRedoRef = useRef(false)
+  // Monaco Editor 自带撤销/重做功能，但仍需状态管理来更新UI
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
 
   // 组件模板库 - 动态从组件管理器获取
@@ -74,62 +80,29 @@ export function EnhancedMDXEditor({
     template: string
   }>>([])
 
-  // 保存历史记录
-  const saveToHistory = useCallback((content: string, selection: { start: number; end: number }) => {
-    if (isUndoRedoRef.current) return
+  // 更新撤销/重做状态的函数
+  const updateUndoRedoState = useCallback(() => {
+    if (monacoRef.current) {
+      setCanUndo(monacoRef.current.canUndo())
+      setCanRedo(monacoRef.current.canRedo())
+    }
+  }, [])
 
-    setHistory(prev => {
-      const newHistory = prev.slice(0, historyIndex + 1)
-      newHistory.push({ content, selection })
-      
-      // 限制历史记录长度
-      if (newHistory.length > 100) {
-        newHistory.shift()
-        setHistoryIndex(prev => prev - 1)
-      }
-      
-      return newHistory
-    })
-    setHistoryIndex(prev => prev + 1)
-  }, [historyIndex])
-
-  // 撤销功能
+  // 撤销功能 - 使用 Monaco Editor 的内置功能
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1]
-      isUndoRedoRef.current = true
-      onChange(prevState.content)
-      setHistoryIndex(prev => prev - 1)
-      
-      setTimeout(() => {
-        const textarea = textareaRef.current
-        if (textarea) {
-          textarea.focus()
-          textarea.setSelectionRange(prevState.selection.start, prevState.selection.end)
-        }
-        isUndoRedoRef.current = false
-      }, 0)
+    if (monacoRef.current && canUndo) {
+      monacoRef.current.undo()
+      updateUndoRedoState()
     }
-  }, [historyIndex, history, onChange])
+  }, [canUndo])
 
-  // 重做功能
+  // 重做功能 - 使用 Monaco Editor 的内置功能
   const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1]
-      isUndoRedoRef.current = true
-      onChange(nextState.content)
-      setHistoryIndex(prev => prev + 1)
-      
-      setTimeout(() => {
-        const textarea = textareaRef.current
-        if (textarea) {
-          textarea.focus()
-          textarea.setSelectionRange(nextState.selection.start, nextState.selection.end)
-        }
-        isUndoRedoRef.current = false
-      }, 0)
+    if (monacoRef.current && canRedo) {
+      monacoRef.current.redo()
+      updateUndoRedoState()
     }
-  }, [historyIndex, history, onChange])
+  }, [canRedo])
 
   const toggleFullscreen = () => {
     const newFullscreenState = !isFullscreen
@@ -170,6 +143,16 @@ export function EnhancedMDXEditor({
       document.body.style.overflow = ''
     }
   }, [isFullscreen])
+
+  // 清理函数 - 防止内存泄漏
+  useEffect(() => {
+    return () => {
+      // 清理动画帧
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [])
 
 
   useEffect(() => {
@@ -257,73 +240,28 @@ return createElement(
   }, [])
 
 
-  // 工具栏操作
+  // 工具栏操作 - 适配 Monaco Editor
   const insertText = (before: string, after: string = '', defaultText: string = '') => {
-    const textarea = textareaRef.current
-    if (!textarea) return
+    if (!monacoRef.current) return
 
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-    const selectedText = textarea.value.substring(start, end)
+    const selectedText = monacoRef.current.getSelectedText()
     const textToInsert = selectedText || defaultText
+    const finalText = before + textToInsert + after
 
-    // 保存当前状态到历史记录
-    saveToHistory(textarea.value, { start, end })
-
-    const newText =
-      textarea.value.substring(0, start) +
-      before + textToInsert + after +
-      textarea.value.substring(end)
-
-    onChange(newText)
-
-    // 重新聚焦并设置光标位置，确保滚动到正确位置
-    setTimeout(() => {
-      textarea.focus()
-      const newStart = start + before.length
-      const newEnd = newStart + textToInsert.length
-      textarea.setSelectionRange(newStart, newEnd)
-      
-      // 确保光标可见，滚动到光标位置
-      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight)
-      const currentLine = textarea.value.substring(0, newStart).split('\n').length
-      const scrollTop = (currentLine - 5) * lineHeight // 保持光标上方有几行可见
-      textarea.scrollTop = Math.max(0, scrollTop)
-    }, 0)
+    if (selectedText) {
+      monacoRef.current.replaceSelection(finalText)
+    } else {
+      monacoRef.current.insertText(finalText)
+    }
+    
+    updateUndoRedoState()
   }
 
   const insertAtNewLine = (text: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const beforeCursor = textarea.value.substring(0, start)
-    const afterCursor = textarea.value.substring(start)
-
-    // 保存当前状态到历史记录
-    saveToHistory(textarea.value, { start, end: start })
-
-    // 检查是否需要添加换行符
-    const needsNewlineBefore = beforeCursor.length > 0 && !beforeCursor.endsWith('\n')
-    const needsNewlineAfter = afterCursor.length > 0 && !afterCursor.startsWith('\n')
-
-    const prefix = needsNewlineBefore ? '\n' : ''
-    const suffix = needsNewlineAfter ? '\n' : ''
-
-    const newText = beforeCursor + prefix + text + suffix + afterCursor
-    onChange(newText)
-
-    setTimeout(() => {
-      textarea.focus()
-      const newPosition = start + prefix.length + text.length
-      textarea.setSelectionRange(newPosition, newPosition)
-      
-      // 确保光标可见，滚动到光标位置
-      const lineHeight = parseFloat(getComputedStyle(textarea).lineHeight) || 20
-      const currentLine = newText.substring(0, newPosition).split('\n').length
-      const scrollTop = (currentLine - 5) * lineHeight // 保持光标上方有几行可见
-      textarea.scrollTop = Math.max(0, scrollTop)
-    }, 0)
+    if (!monacoRef.current) return
+    
+    monacoRef.current.insertAtNewLine(text)
+    updateUndoRedoState()
   }
 
   // 工具栏按钮类型
@@ -343,13 +281,13 @@ return createElement(
           icon: Undo, 
           label: '撤销', 
           action: undo,
-          disabled: historyIndex <= 0
+          disabled: !canUndo
         },
         { 
           icon: Redo, 
           label: '重做', 
           action: redo,
-          disabled: historyIndex >= history.length - 1
+          disabled: !canRedo
         },
       ]
     },
@@ -424,82 +362,98 @@ return createElement(
     }
   ]
 
-  // 快捷键处理
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      switch (e.key) {
-        case 'z':
-          e.preventDefault()
-          if (e.shiftKey) {
-            redo() // Ctrl+Shift+Z 重做
-          } else {
-            undo() // Ctrl+Z 撤销
-          }
-          break
-        case 'y':
-          e.preventDefault()
-          redo() // Ctrl+Y 重做
-          break
-        case 'b':
-          e.preventDefault()
-          insertText('**', '**', '粗体文本')
-          break
-        case 'i':
-          e.preventDefault()
-          insertText('*', '*', '斜体文本')
-          break
-        case 'k':
-          e.preventDefault()
-          insertText('[', '](url)', '链接文本')
-          break
-        case '`':
-          e.preventDefault()
-          insertText('`', '`', '代码')
-          break
+  // 优化的滚动同步函数
+  const syncPreviewScroll = useCallback((scrollTop: number, scrollHeight: number, clientHeight: number) => {
+    if (!previewRef.current || !isFullscreen) return
+
+    // 取消之前的动画帧
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current)
+    }
+
+    // 使用 requestAnimationFrame 优化性能
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const preview = previewRef.current
+      if (!preview) return
+
+      const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
+      if (maxScrollTop === 0) return // 没有可滚动内容
+      
+      const scrollPercentage = Math.min(1, Math.max(0, scrollTop / maxScrollTop))
+      
+      const previewScrollHeight = Math.max(0, preview.scrollHeight - preview.clientHeight)
+      if (previewScrollHeight > 0) {
+        const targetScrollTop = Math.floor(previewScrollHeight * scrollPercentage)
+        
+        // 避免微小变化导致的抖动
+        const currentScrollTop = preview.scrollTop
+        const scrollDiff = Math.abs(targetScrollTop - currentScrollTop)
+        
+        if (scrollDiff >= 1) { // 只有差异大于1px才更新
+          preview.scrollTop = targetScrollTop
+        }
       }
-    }
+    })
+  }, [isFullscreen])
 
-    // Tab 键处理
-    if (e.key === 'Tab') {
-      e.preventDefault()
-      insertText('  ', '', '')
-    }
-  }
-
-  // 处理输入变化
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newValue = e.target.value
-    const textarea = e.target
+  // 节流的滚动处理函数 - 确保滚动事件不会过于频繁触发
+  const throttledScrollSync = useCallback((scrollInfo: any) => {
+    const now = Date.now()
+    const timeSinceLastScroll = now - lastScrollTimeRef.current
     
-    // 保存历史记录 (使用防抖避免过于频繁的保存)
-    if (!isUndoRedoRef.current && Math.abs(newValue.length - value.length) > 5) {
-      saveToHistory(value, { 
-        start: textarea.selectionStart, 
-        end: textarea.selectionEnd 
+    // 节流控制：至少间隔 16ms (约 60fps)
+    if (timeSinceLastScroll >= 10) {
+      lastScrollTimeRef.current = now
+      
+      const { scrollTop, scrollHeight } = scrollInfo
+      syncPreviewScroll(scrollTop, scrollHeight, scrollInfo.clientHeight)
+    }
+  }, [syncPreviewScroll])
+
+  // Monaco Editor 挂载时的配置
+  const handleMonacoMount = useCallback((editor: any, monaco: any) => {
+    // 更新撤销/重做状态
+    const updateStates = () => {
+      updateUndoRedoState()
+    }
+    
+    // 监听编辑器内容变化以更新状态
+    editor.onDidChangeModelContent(updateStates)
+    
+    // 优化的滚动同步监听 - 使用节流而不是防抖
+    editor.onDidScrollChange((e: any) => {
+      // 只在全屏模式且预览存在时同步
+      if (!isFullscreen || !previewRef.current) return
+
+      // 直接调用节流函数，无需额外的 setTimeout
+      throttledScrollSync({
+        scrollTop: e.scrollTop,
+        scrollHeight: e.scrollHeight,
+        clientHeight: editor.getLayoutInfo().height
       })
-    }
+    })
     
+    // 自定义快捷键
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
+      setShowAIAssistant(true)
+    })
+    
+    // 初始状态更新
+    updateStates()
+    
+    // Monaco Editor 自带清理机制，无需额外清理
+  }, [throttledScrollSync, isFullscreen])
+
+  // 处理Monaco编辑器内容变化
+  const handleMonacoChange = (newValue: string) => {
     onChange(newValue)
+    updateUndoRedoState()
   }
 
-  // 同步滚动处理
-  const handleEditorScroll = () => {
-    if (!isFullscreen || !textareaRef.current || !previewRef.current) return
-
-    const textarea = textareaRef.current
-    const preview = previewRef.current
-
-    // 计算编辑器的滚动百分比
-    const scrollTop = textarea.scrollTop
-    const scrollHeight = textarea.scrollHeight - textarea.clientHeight
-    const scrollPercentage = scrollHeight > 0 ? scrollTop / scrollHeight : 0
-
-    // 同步到预览区域
-    const previewScrollHeight = preview.scrollHeight - preview.clientHeight
-    if (previewScrollHeight > 0) {
-      preview.scrollTop = previewScrollHeight * scrollPercentage
-    }
-  }
+  // 滚动同步已在 handleMonacoMount 中实现
+  // const handleEditorScroll = () => {
+  //   // 已通过 Monaco Editor 的 onDidScrollChange 事件实现
+  // }
 
   // 实时预览模式切换
   const togglePreview = () => {
@@ -511,52 +465,21 @@ return createElement(
     insertAtNewLine(markdownText)
   }
 
-  // AI 助手相关函数
+  // AI 助手相关函数 - 适配 Monaco Editor
   const handleAIContentReplace = (newContent: string) => {
-    // 保存当前状态到历史记录
-    const textarea = textareaRef.current
-    if (textarea) {
-      saveToHistory(value, { 
-        start: textarea.selectionStart, 
-        end: textarea.selectionEnd 
-      })
+    if (monacoRef.current) {
+      monacoRef.current.setValue(newContent)
+      monacoRef.current.focus()
+      updateUndoRedoState()
     }
-    
-    onChange(newContent)
-    
-    // 重新聚焦到编辑器
-    setTimeout(() => {
-      if (textarea) {
-        textarea.focus()
-        const newPosition = newContent.length
-        textarea.setSelectionRange(newPosition, newPosition)
-      }
-    }, 0)
   }
 
   const handleAIContentInsert = (content: string) => {
-    const textarea = textareaRef.current
-    if (!textarea) return
-
-    const start = textarea.selectionStart
-    const end = textarea.selectionEnd
-
-    // 保存当前状态到历史记录
-    saveToHistory(value, { start, end })
-
-    const newText = 
-      value.substring(0, start) + 
-      content + 
-      value.substring(end)
-
-    onChange(newText)
-
-    // 重新聚焦并设置光标位置
-    setTimeout(() => {
-      textarea.focus()
-      const newPosition = start + content.length
-      textarea.setSelectionRange(newPosition, newPosition)
-    }, 0)
+    if (monacoRef.current) {
+      monacoRef.current.insertText(content)
+      monacoRef.current.focus()
+      updateUndoRedoState()
+    }
   }
 
   return (
@@ -668,17 +591,16 @@ return createElement(
                 </div>
               </div>
 
-              {/* 编辑器区域 */}
+              {/* Monaco 编辑器区域 */}
               <div className="flex-1 relative">
-                <Textarea
-                  ref={textareaRef}
+                <MonacoMarkdownEditor
+                  ref={monacoRef}
                   value={value}
-                  onChange={handleInput}
-                  onKeyDown={handleKeyDown}
-                  onScroll={handleEditorScroll}
+                  onChange={handleMonacoChange}
                   placeholder={placeholder}
-                  className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
-                  style={{ minHeight: height }}
+                  height="100%"
+                  theme={theme === 'dark' ? 'dark' : 'light'}
+                  onMount={handleMonacoMount}
                 />
               </div>
             </div>
@@ -719,17 +641,17 @@ return createElement(
         ) : (
           <>
             {/* 非全屏模式：原有逻辑 */}
-            {/* 编辑器 */}
+            {/* Monaco 编辑器 */}
             {!isPreview && (
               <div className="flex-1 relative">
-                <Textarea
-                  ref={textareaRef}
+                <MonacoMarkdownEditor
+                  ref={monacoRef}
                   value={value}
-                  onChange={handleInput}
-                  onKeyDown={handleKeyDown}
+                  onChange={handleMonacoChange}
                   placeholder={placeholder}
-                  className="w-full h-full p-4 font-mono text-sm resize-none border-0 outline-none bg-background"
-                  style={{ minHeight: height }}
+                  height={height}
+                  theme={theme === 'dark' ? 'dark' : 'light'}
+                  onMount={handleMonacoMount}
                 />
               </div>
             )}
