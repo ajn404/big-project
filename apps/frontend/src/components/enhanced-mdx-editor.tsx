@@ -62,7 +62,7 @@ export function EnhancedMDXEditor({
   const editorRef = useRef<HTMLDivElement>(null)
   const previewRef = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
-  
+
   // 滚动同步优化相关 refs
   const lastScrollTimeRef = useRef<number>(0)
   const animationFrameRef = useRef<number>()
@@ -253,13 +253,13 @@ return createElement(
     } else {
       monacoRef.current.insertText(finalText)
     }
-    
+
     updateUndoRedoState()
   }
 
   const insertAtNewLine = (text: string) => {
     if (!monacoRef.current) return
-    
+
     monacoRef.current.insertAtNewLine(text)
     updateUndoRedoState()
   }
@@ -277,15 +277,15 @@ return createElement(
     {
       group: '编辑',
       buttons: [
-        { 
-          icon: Undo, 
-          label: '撤销', 
+        {
+          icon: Undo,
+          label: '撤销',
           action: undo,
           disabled: !canUndo
         },
-        { 
-          icon: Redo, 
-          label: '重做', 
+        {
+          icon: Redo,
+          label: '重做',
           action: redo,
           disabled: !canRedo
         },
@@ -378,17 +378,17 @@ return createElement(
 
       const maxScrollTop = Math.max(0, scrollHeight - clientHeight)
       if (maxScrollTop === 0) return // 没有可滚动内容
-      
+
       const scrollPercentage = Math.min(1, Math.max(0, scrollTop / maxScrollTop))
-      
+
       const previewScrollHeight = Math.max(0, preview.scrollHeight - preview.clientHeight)
       if (previewScrollHeight > 0) {
         const targetScrollTop = Math.floor(previewScrollHeight * scrollPercentage)
-        
+
         // 避免微小变化导致的抖动
         const currentScrollTop = preview.scrollTop
         const scrollDiff = Math.abs(targetScrollTop - currentScrollTop)
-        
+
         if (scrollDiff >= 1) { // 只有差异大于1px才更新
           preview.scrollTop = targetScrollTop
         }
@@ -400,11 +400,11 @@ return createElement(
   const throttledScrollSync = useCallback((scrollInfo: any) => {
     const now = Date.now()
     const timeSinceLastScroll = now - lastScrollTimeRef.current
-    
+
     // 节流控制：至少间隔 16ms (约 60fps)
     if (timeSinceLastScroll >= 10) {
       lastScrollTimeRef.current = now
-      
+
       const { scrollTop, scrollHeight } = scrollInfo
       syncPreviewScroll(scrollTop, scrollHeight, scrollInfo.clientHeight)
     }
@@ -416,10 +416,10 @@ return createElement(
     const updateStates = () => {
       updateUndoRedoState()
     }
-    
+
     // 监听编辑器内容变化以更新状态
     editor.onDidChangeModelContent(updateStates)
-    
+
     // 优化的滚动同步监听 - 使用节流而不是防抖
     editor.onDidScrollChange((e: any) => {
       // 只在全屏模式且预览存在时同步
@@ -432,15 +432,15 @@ return createElement(
         clientHeight: editor.getLayoutInfo().height
       })
     })
-    
+
     // 自定义快捷键
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
       setShowAIAssistant(true)
     })
-    
+
     // 初始状态更新
     updateStates()
-    
+
     // Monaco Editor 自带清理机制，无需额外清理
   }, [throttledScrollSync, isFullscreen])
 
@@ -489,8 +489,8 @@ return createElement(
     <div
       ref={editorRef}
       className={`border border-input rounded-lg overflow-hidden transition-all duration-200 ${isFullscreen
-          ? "fixed inset-0 z-50 bg-background rounded-none border-0"
-          : ""
+        ? "fixed inset-0 z-50 bg-background rounded-none border-0"
+        : ""
         }`}
     >
       {/* 工具栏 */}
@@ -657,7 +657,10 @@ return createElement(
                   onMount={handleMonacoMount}
                 />
               </div>
+
             )}
+
+
 
             {/* 预览 */}
             {isPreview && (
@@ -673,7 +676,6 @@ return createElement(
           </>
         )}
       </div>
-
       {/* 状态栏 */}
       <div className="bg-muted px-4 py-2 text-xs text-muted-foreground border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-4">

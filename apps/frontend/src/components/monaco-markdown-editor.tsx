@@ -41,7 +41,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
 }, ref) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
-
+  
   // 暴露给父组件的方法
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {

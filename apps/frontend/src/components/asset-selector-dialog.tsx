@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@workspace/ui-components';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@workspace/ui-components';
 import { AssetManager } from './asset-manager';
 import { Asset, AssetType } from '@/types/asset';
 
@@ -32,6 +32,7 @@ export function AssetSelectorDialog({
       <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>选择图片</DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-auto">
           <AssetManager
