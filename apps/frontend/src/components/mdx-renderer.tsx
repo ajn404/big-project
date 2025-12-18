@@ -71,11 +71,11 @@ function MDXImage({ src, alt, ...props }: any) {
   const shouldShowMosaic = isMosaicDefault && !showPreview
   
   return (
-    <span className="relative inline-block my-6">
+    <span className="relative m-auto">
       <img 
         src={src} 
         alt={alt || ''} 
-        className={`max-w-full h-auto rounded-lg shadow-md border border-border cursor-pointer hover:shadow-lg transition-all ${
+        className={`max-w-full m-auto h-auto rounded-lg shadow-md border border-border cursor-pointer hover:shadow-lg transition-all ${
           shouldShowMosaic ? 'filter blur-lg' : ''
         }`}
         onClick={handleClick}

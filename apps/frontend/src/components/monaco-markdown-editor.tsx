@@ -250,7 +250,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
       fontLigatures: true,
       wordWrap: 'on',
       wrappingIndent: 'indent',
-      lineNumbers: 'on',
+      lineNumbers: 'off',
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
       automaticLayout: true,

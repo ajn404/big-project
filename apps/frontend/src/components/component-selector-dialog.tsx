@@ -141,7 +141,7 @@ export function ComponentSelectorDialog({
                   <div key={category}>
                     {/* 分类标题 - 仅在非搜索状态显示 */}
                     {searchQuery === '' && selectedCategory === '全部' && (
-                      <div className="sticky top-0 bg-muted/50 px-4 py-2 border-b">
+                      <div className="sticky top-0 bg-muted/100 px-4 py-2 border-b">
                         <div className="flex items-center gap-2">
                           {getCategoryIcon(category)}
                           <span className="font-medium text-sm">{category}</span>
