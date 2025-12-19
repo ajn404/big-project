@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
 import { WebGLRenderer, PerspectiveCamera, Scene } from 'three'
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+// import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { LumaSplatsThree } from '@lumaai/luma-web'
 
 interface LumaDemoProps {
