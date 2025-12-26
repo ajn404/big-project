@@ -151,7 +151,6 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
       alert('请填写必填字段')
       return
     }
-
     try {
       if (isEditing) {
         await updatePracticeNode({
@@ -172,8 +171,8 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
             }
           }
         })
+        onClose()  // 在这里手动关闭
       }
-      onClose()  // 在这里手动关闭
     } catch (error) {
       console.error('操作失败:', error)
     }
@@ -219,6 +218,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
 
   const handleEscapeKeyDown = (e: KeyboardEvent) => {
     e.preventDefault()
+    e.stopPropagation()
   }
   return (
     <Dialog open={open} onOpenChange={onClose} >

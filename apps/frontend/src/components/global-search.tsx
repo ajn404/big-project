@@ -245,7 +245,9 @@ export function GlobalSearch({ isOpen, onClose }: GlobalSearchProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent aria-description='global search' className="w-full max-w-3xl max-h-[80vh] p-6 gap-0 overflow-hidden">
+      <DialogContent
+        onEscapeKeyDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+        aria-description='global search' className="w-full max-w-3xl max-h-[80vh] p-6 gap-0 overflow-hidden">
         <DialogTitle>全局搜索</DialogTitle>
         <DialogDescription>搜索文章、标签或分类</DialogDescription>
 

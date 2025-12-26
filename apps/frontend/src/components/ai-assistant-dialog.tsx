@@ -95,7 +95,9 @@ export function AIAssistantDialog({
       onOpenChange(open);
       if (!open) resetDialog();
     }}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent
+        onEscapeKeyDown={(e) => { e.preventDefault(); e.stopPropagation() }}
+        className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bot className="h-5 w-5 text-primary" />

@@ -82,7 +82,7 @@ export function TableOfContents({ content, className }: TableOfContentsProps) {
   }
 
   return (
-    <div className="hidden lg:block w-80 flex-shrink-0">
+    <div className="hidden lg:block w-80 flex-shrink-0 print:w-0 hidden">
       <Card className={cn("sticky top-20", className)}>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center text-sm font-medium">

@@ -29,7 +29,9 @@ export function AssetSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent
+        onEscapeKeyDown={(e) => { e.preventDefault(); e.stopPropagation()}}
+        className="max-w-6xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>选择图片</DialogDescription>
