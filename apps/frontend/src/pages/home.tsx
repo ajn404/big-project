@@ -46,42 +46,42 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Enhanced Stats Section */}
       <section className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">实践项目</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">实践项目</CardTitle>
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+              <BookOpen className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalNodes}</div>
-            <p className="text-xs text-muted-foreground">
-              涵盖前端、后端、全栈
-            </p>
+            <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{totalNodes}</div>
+            <p className="text-xs text-muted-foreground mt-1">涵盖前端、后端、全栈</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">学习时长</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">学习时长</CardTitle>
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+              <Clock className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{Math.round(totalTime / 60)}h</div>
-            <p className="text-xs text-muted-foreground">
-              预估总学习时间
-            </p>
+            <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{Math.round(totalTime / 60)}h</div>
+            <p className="text-xs text-muted-foreground mt-1">预估总学习时间</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 dark:border-slate-800 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">技能提升</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">技能提升</CardTitle>
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">100%</div>
-            <p className="text-xs text-muted-foreground">
-              实战导向的学习
-            </p>
+            <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">100%</div>
+            <p className="text-xs text-muted-foreground mt-1">实战导向的学习</p>
           </CardContent>
         </Card>
       </section>
