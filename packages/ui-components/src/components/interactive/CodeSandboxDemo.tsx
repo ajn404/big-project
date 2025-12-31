@@ -1,6 +1,6 @@
 import React from 'react'
 import { createAutoRegisterComponent, CATEGORIES } from '../../auto-register'
-import { CodeSandbox } from '../ui/CodeSandbox'
+import { CodeSandboxSDK } from './CodeSandboxSDK'
 
 interface CodeSandboxDemoProps {
   initialCode?: string
@@ -17,9 +17,9 @@ interface CodeSandboxDemoProps {
   enableConsole?: boolean
 }
 
-const CodeSandboxDemo: React.FC<CodeSandboxDemoProps> = (props) => {
-  const defaultCode = `// React 代码沙箱示例 - 使用自定义 CSS 样式
+const defaultCode = `// React 代码沙箱示例 - 使用自定义 CSS 样式
 function CounterExample() {
+  const { useState, useEffect } = React
   const [count, setCount] = useState(0)
   const [message, setMessage] = useState('点击按钮开始计数！')
   
@@ -85,10 +85,10 @@ function CounterExample() {
   )
 }
 
-return <CounterExample />
+ReactDOM.render(<CounterExample />, document.getElementById('root'))
 `
 
-  const defaultCSS = `/* 自定义样式 */
+const defaultCSS = `/* 自定义样式 */
 .counter-container {
   padding: 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -208,20 +208,79 @@ return <CounterExample />
   100% { transform: scale(1); opacity: 1; }
 }`;
 
+const CodeSandboxDemo: React.FC<CodeSandboxDemoProps> = (props) => {
+  const { 
+    initialCode = defaultCode,
+    initialCSS = defaultCSS,
+    language = 'jsx',
+    width = '100%',
+    height = 600,
+    theme = 'auto',
+  } = props;
+
+  const getTemplate = () => {
+    if (language === 'typescript' || language === 'tsx') {
+      return 'react-ts'
+    }
+    return 'react'
+  }
+
+  const files = {
+    'package.json': {
+      code: JSON.stringify({
+        "name": "react-sandbox",
+        "version": "1.0.0",
+        "description": "",
+        "main": "index.js",
+        "scripts": {
+          "start": "react-scripts start",
+          "build": "react-scripts build",
+          "test": "react-scripts test",
+          "eject": "react-scripts eject"
+        },
+        "dependencies": {
+          "react": "^18.2.0",
+          "react-dom": "^18.2.0",
+          "react-scripts": "5.0.1"
+        },
+      }, null, 2)
+    },
+    'public/index.html': {
+      code: `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>React Sandbox</title>
+    <link rel="stylesheet" href="src/styles.css">
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>`
+    },
+    'src/index.js': {
+      code: `import React from 'react';
+import ReactDOM from 'react-dom';
+import './styles.css';
+
+${initialCode}
+`
+    },
+    'src/styles.css': {
+      code: initialCSS
+    }
+  }
+
   return (
-    <CodeSandbox 
-      initialCode={props.initialCode || defaultCode}
-      initialCSS={props.initialCSS || defaultCSS}
-      language={props.language || 'jsx'}
-      width={props.width || '100%'}
-      height={props.height || 600}
-      theme={props.theme || 'auto'}
-      showEditor={props.showEditor !== false}
-      showPreview={props.showPreview !== false}
-      showCSS={props.showCSS !== false}
-      allowFullscreen={props.allowFullscreen !== false}
-      readOnly={props.readOnly || false}
-      enableConsole={props.enableConsole !== false}
+    <CodeSandboxSDK 
+      files={files}
+      template={getTemplate()}
+      width={width}
+      height={height}
+      embedStyle={theme}
+      title="CodeSandbox Demo"
     />
   )
 }
