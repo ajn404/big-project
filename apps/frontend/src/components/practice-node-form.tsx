@@ -171,8 +171,8 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
             }
           }
         })
-        onClose()  // 在这里手动关闭
       }
+      onClose()  // 在这里手动关闭
     } catch (error) {
       console.error('操作失败:', error)
     }
@@ -431,7 +431,7 @@ export function PracticeNodeForm({ node, categories, tags, open, onClose }: Prac
                       value={formData.content}
                       onChange={(value) => handleInputChange('content', value)}
                       placeholder="输入 MDX 内容，支持 Markdown 语法和实时预览..."
-                      height="500px"
+                      height="600px"
                     />
                   </div>
                 )}

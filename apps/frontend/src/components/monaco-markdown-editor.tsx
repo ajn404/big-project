@@ -33,7 +33,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
   value,
   onChange,
   placeholder = 'Start writing...',
-  height = 400,
+  height = 500,
   theme = 'light',
   readOnly = false,
   onMount,
@@ -41,7 +41,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
 }, ref) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<Monaco | null>(null);
-  
+
   // 暴露给父组件的方法
   useImperativeHandle(ref, () => ({
     insertText: (text: string) => {
@@ -60,7 +60,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
           text,
           forceMoveMarkers: true,
         }]);
-        
+
         // 移动光标到插入文本的末尾
         const newPosition = {
           lineNumber: selection.startLineNumber,
@@ -81,12 +81,12 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
         if (model) {
           const lineContent = model.getLineContent(position.lineNumber);
           const isLineEmpty = lineContent.trim() === '';
-          
+
           let insertText = text;
           if (!isLineEmpty) {
             insertText = '\n' + text;
           }
-          
+
           editor.executeEdits('insert-at-new-line', [{
             range: new monaco.Range(
               position.lineNumber,
@@ -97,7 +97,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
             text: insertText,
             forceMoveMarkers: true,
           }]);
-          
+
           editor.focus();
         }
       }
@@ -106,7 +106,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
     getSelectedText: () => {
       const editor = editorRef.current;
       if (!editor) return '';
-      
+
       const selection = editor.getSelection();
       if (selection) {
         const model = editor.getModel();
@@ -388,6 +388,10 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
       }], () => null);
     }
 
+    // 设置初始主题
+    const initialTheme = theme === 'dark' ? 'markdown-dark' : 'markdown-light';
+    monaco.editor.setTheme(initialTheme);
+
     // 调用外部 onMount 回调
     onMount?.(editor, monaco);
   }, [onChange, onMount, onSelectionChange, placeholder, value]);
@@ -410,6 +414,7 @@ const MonacoMarkdownEditor = forwardRef<MonacoEditorHandle, MonacoMarkdownEditor
 
   // 主题切换效果
   useEffect(() => {
+    console.log(theme, 'theme', monacoRef.current, editorRef.current)
     if (monacoRef.current && editorRef.current) {
       const themeToApply = theme === 'dark' ? 'markdown-dark' : 'markdown-light';
       monacoRef.current.editor.setTheme(themeToApply);
